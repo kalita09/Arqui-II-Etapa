@@ -22,7 +22,7 @@ public class Controlador implements Runnable{
     int hiloActual2;
     Memoria m;
     CyclicBarrier barrera;
-    Nucleo [] vectorNucleos;
+    Nucleo[] vectorNucleos;
     int quantum;
     int ciclosReloj;
     static int numNUCLEOS = 2;
@@ -38,8 +38,8 @@ public class Controlador implements Runnable{
 	    numeroHilos = tamanoCola;
 	    apuntadorCola = 0;
 	    apuntadorCola2 = 1;
-	    hiloActual1 = 1;
-	    hiloActual2 = 2;
+	    hiloActual1 = 0;
+	    hiloActual2 = 1;
 	    this.quantum = quantum;
 	    this.ciclosReloj = 0;
 	
@@ -51,7 +51,7 @@ public class Controlador implements Runnable{
     void iniciar(){
         this.m = new Memoria();
         
-        int bloque;
+        int bloque; //bloque donde inicia cada archivo (hilo)
         
         //Guarda en cola donde inicia cada hilo
         for(int j = 1; j <= numeroHilos; j++ ){   
@@ -67,7 +67,7 @@ public class Controlador implements Runnable{
                 
         }
 
-        this.barrera = new CyclicBarrier(2,this);
+        this.barrera = new CyclicBarrier(2, this);
         
         //iniciar vector de nucleos
         vectorNucleos[0] = new Nucleo("Nucleo 1",barrera,this.m,colaEspera[0][this.apuntadorCola],
@@ -109,16 +109,16 @@ public class Controlador implements Runnable{
     	boolean encontrado = false;
     	if(par==0) {
         	while(i<this.numeroHilos/2+1 && !encontrado) {
-	        	if((this.apuntadorCola+2)<= this.numeroHilos){
+	        	if((this.apuntadorCola+2)<= this.numeroHilos){ 
 	
-	                if((this.apuntadorCola)==(this.numeroHilos-2)   ){
+	                if((this.apuntadorCola)==(this.numeroHilos-2)){ //Ultimo hilo que puede verificar, entonces va al primero de la cola
 	                   this.apuntadorCola=0; 
 	                   if(this.colaEspera[3][apuntadorCola] == 0){
 		                	encontrado = true;
 		                }
 	
 	                } else{
-	                   this.apuntadorCola+=2; 
+	                   this.apuntadorCola+=2; //Siguiente hilo
 	                }
 	                if(this.colaEspera[3][apuntadorCola] == 0){
 	                	encontrado = true;
@@ -177,28 +177,27 @@ public class Controlador implements Runnable{
         System.out.println("Quantum"+Nucleo.quantum);
         System.out.println("Ciclo reloj"+Nucleo.ciclosReloj);
         System.out.println("Despues registro");
-            for(int i=0; i<2; i++) {
-                    System.out.println("Nucleo "+i);
-                    vectorNucleos[i].imprimirRegistros();
-            }
+        for(int i=0; i<2; i++) {
+            System.out.println("Nucleo "+i);
+            vectorNucleos[i].imprimirRegistros();
+        }
             
-            this.m.imprimirMem();
+        this.m.imprimirMem();
         System.out.println("Despues cache");
-            for(int i=0; i<2; i++){ 
-                    System.out.println("Nucleo "+i);
-                    vectorNucleos[i].imprimirCache();
-            }
+        for(int i=0; i<2; i++){ 
+            System.out.println("Nucleo "+i);
+            vectorNucleos[i].imprimirCache();
+        }
             
-            if(vectorNucleos[0].terminado==true){//nucleo 1 termino su hilo
+        if((vectorNucleos[0].terminado) && (!vectorNucleos[0].desactivado)) { //nucleo 1 termino su hilo
 
                 //guardo contexto de hilo terminado
-                this.vectorContextos[this.apuntadorCola].guardarContexto( this.vectorNucleos[0].PC,this.vectorNucleos[0].registros);
+                this.vectorContextos[this.apuntadorCola].guardarContexto(this.vectorNucleos[0].PC,this.vectorNucleos[0].registros);
                  colaEspera[3][this.apuntadorCola] = 1;
 
                  this.buscarSiguienteHilo(0);
                  if(colaEspera[3][this.apuntadorCola] == 1) {
-                	 this.vectorNucleos[0].apagado = true;
-                	 this.vectorNucleos[0].seguir = false;
+                	 this.vectorNucleos[0].desactivado = true;
                  } else {
                     //asignacion de nuevo hilo para el nucleo
                     vectorNucleos[0].terminado=false;
@@ -207,18 +206,19 @@ public class Controlador implements Runnable{
                     vectorNucleos[0].bloqueInicio = colaEspera[0][this.apuntadorCola];
                     vectorNucleos[0].setPCFin(colaEspera[2][this.apuntadorCola]);
                     vectorNucleos[0].numInstruccion = 0;
+                    vectorNucleos[0].hiloActual = apuntadorCola;
                  }
+            }
 	
-	            if(vectorNucleos[1].terminado==true){//nucleo 2 termino su hilo
+	            if((vectorNucleos[1].terminado==true)&& (!vectorNucleos[1].desactivado)) { //nucleo 2 termino su hilo
 	
 	                //guardo contexto de hilo terminado
-	                this.vectorContextos[this.apuntadorCola2].guardarContexto( this.vectorNucleos[1].PC,this.vectorNucleos[1].registros);
-	                 colaEspera[3][this.apuntadorCola2] = 1;
+	                this.vectorContextos[this.apuntadorCola2].guardarContexto(this.vectorNucleos[1].PC,this.vectorNucleos[1].registros);
+	                colaEspera[3][this.apuntadorCola2] = 1;
 	
 	                this.buscarSiguienteHilo(1);
-	                if(colaEspera[3][this.apuntadorCola] == 1) {
-	               	 this.vectorNucleos[1].apagado = true;
-	               	this.vectorNucleos[1].seguir = false;
+	                if(colaEspera[3][this.apuntadorCola2] == 1) {
+	                	this.vectorNucleos[1].desactivado = true;
 	                } else {
 	                    //asignacion de nuevo hilo para el nucleo
 	                    vectorNucleos[1].terminado=false;
@@ -227,6 +227,7 @@ public class Controlador implements Runnable{
 	                    vectorNucleos[1].bloqueInicio = colaEspera[0][this.apuntadorCola2];
 	                    vectorNucleos[1].setPCFin(colaEspera[2][this.apuntadorCola2]);
 	                    vectorNucleos[1].numInstruccion = 0;
+	                    vectorNucleos[1].hiloActual = apuntadorCola2;
 	                }
 	            }	            
 	            
@@ -236,7 +237,7 @@ public class Controlador implements Runnable{
 	                
 	                 boolean programaTerminado = true;
 	                 for(int i=0;i<this.numeroHilos;i++){
-	                    if(colaEspera[3][i] != 1){
+	                    if(colaEspera[3][i] != 1) {
 	                        programaTerminado = false;
 	                    }
 	
@@ -254,12 +255,14 @@ public class Controlador implements Runnable{
 	                 }
 	                
 	            }
-	            if(this.vectorNucleos[0].apagado && this.vectorNucleos[1].apagado) {
+	            if(this.vectorNucleos[0].desactivado && this.vectorNucleos[1].desactivado) {
+	            	this.vectorNucleos[0].apagado = true;
+	            	this.vectorNucleos[0].apagado = true;
                 	seguir = false;
+                	System.exit(0);
 
-	                }
+	            }
 	                
             }
-    } 
 }
     

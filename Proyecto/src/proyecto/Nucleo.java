@@ -42,6 +42,7 @@ public class Nucleo implements Runnable {
     int contCiclosFallo;
     boolean esperandoBus;
     boolean apagado;
+    boolean desactivado;
     int colaEspera[][];
     int hiloActual;
         
@@ -63,11 +64,12 @@ public class Nucleo implements Runnable {
         this.terminado = false;
         Nucleo.quantum = quantum;
         Nucleo.ciclosReloj = ciclosReloj;
-        this.busInstrucciones = busInstrucciones;
+        Nucleo.busInstrucciones = busInstrucciones;
         this.falloCache = false;
         this.contCiclosFallo = 1;
         this.esperandoBus = false;
         this.apagado = false;
+        this.desactivado = false;
         this.colaEspera = colaEspera;
         this.hiloActual = hiloActual;
 	}
@@ -80,12 +82,7 @@ public class Nucleo implements Runnable {
 	}
 	
 	public void cargarBloque(Bloque b) {
-		cacheInstrucciones[apuntadorCache] = b;
-				if(apuntadorCache<7) {
-		 			apuntadorCache++;
-		 		} else {
-		 			apuntadorCache = 0;
-		 		}
+		cacheInstrucciones[b.ID%this.BLOQUES] = b;
                 
 	}
         void setPC(int miPC){
@@ -117,12 +114,13 @@ public class Nucleo implements Runnable {
     }
 	
 	public boolean contenerBloque() {
-		for(int i=0; i<BLOQUES; i++) {
-			if(cacheInstrucciones[i].getID() == ((this.bloqueInicio + (this.colaEspera[1][this.hiloActual-1]
-					+ this.PC)/4))) { // PC/4 nos da el numero de bloque
+		//this.bloqueInicio + (this.colaEspera[1][this.hiloActual](Posicion de inicio del hilo(0,1,2 o 3)) + this.PC)/4 da la posición del bloque en memoria
+		if(cacheInstrucciones[(this.bloqueInicio%this.BLOQUES + ((this.colaEspera[1][this.hiloActual] + this.PC)/4)%this.BLOQUES)%this.BLOQUES].getID() == (this.bloqueInicio +
+				(this.colaEspera[1][this.hiloActual] + this.PC)/4)) { // PC/4 nos da el numero de bloque
 				
-				return true;
-			}
+
+				
+			return true;
 		}
 		return false;
 	}
@@ -138,51 +136,52 @@ public class Nucleo implements Runnable {
 
     @Override
     public void run() {
-
-        while(seguir){
-        System.out.println("En ejecucion el: "+this.nombreNucleo);
-            try {
-            System.out.print("pc"+this.PC+"bloque inicio "+this.bloqueInicio);
-            //fallo de cache nucleo 1 (falta el bus)
-
-            if(this.contenerBloque() && !this.falloCache) {
-                this.ejecutarInstruccion();
-                if(this.PC > this.pcFin){
-                    this.terminado = true;
-                }
-            } else if(this.falloCache) {
-            	contCiclosFallo--;
-            	if(contCiclosFallo<=1) {
-            		falloCache = false;
-            		esperandoBus = false;
-            		contCiclosFallo = 1;
-            		busInstrucciones.release();
-            		this.ejecutarInstruccion();
-            	}
-            } else {
-            	esperandoBus = true;
-                if(busInstrucciones.tryAcquire()){
-                	Bloque b1 = this.memoria.getBloque((this.bloqueInicio + (this.colaEspera[1][this.hiloActual-1] + this.PC)/4));                	
-                	cargarBloque(b1);
-                	System.out.print("cargando bloque: "+this.bloqueInicio+" PC:"+this.PC/4+". ");
-                	System.out.print("hay fallo");
-                	falloCache = true;
-                    contCiclosFallo--;
-                    System.out.print("cargando bloque: "+this.bloqueInicio+" PC: "+this.PC/4+".");
-                    System.out.print("hay fallo");   
-                }
-            }
-            
-            try {
-            	this.barrier.await();
-            } catch(BrokenBarrierException ex) {}
-
-            
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-        }
+    	while(!apagado) {
+	        while(this.seguir) {
+	        	if(nombreNucleo.equals("Nucleo 2") && (registros[4]==964)) {
+	        		System.out.println("a");
+	        	}
+	        	System.out.println("En ejecucion el: "+this.nombreNucleo);
+	            try {
+	            System.out.print("pc"+this.PC+"bloque inicio "+this.bloqueInicio);
+	            //fallo de cache nucleo 1 (falta el bus)
+	
+	            if(this.contenerBloque() && !this.falloCache) {
+	                this.ejecutarInstruccion();
+	                
+	            } else if(this.falloCache) {
+	            	contCiclosFallo--;
+	            	if(contCiclosFallo<=1) {
+	            		falloCache = false;
+	            		esperandoBus = false;
+	            		contCiclosFallo = 1;
+	            		busInstrucciones.release();
+	            		this.ejecutarInstruccion();
+	            	}
+	            } else {
+	            	esperandoBus = true;
+	                if(busInstrucciones.tryAcquire()){
+	                	Bloque b1 = this.memoria.getBloque((this.bloqueInicio + (this.colaEspera[1][this.hiloActual] + this.PC)/4));                	
+	                	cargarBloque(b1);
+	                	System.out.print("cargando bloque: "+this.bloqueInicio+" PC:"+this.PC/4+". ");
+	                	System.out.print("hay fallo");
+	                	falloCache = true;
+	                    contCiclosFallo--;
+	                    System.out.print("cargando bloque: "+this.bloqueInicio+" PC: "+this.PC/4+".");
+	                    System.out.print("hay fallo");   
+	                }
+	            }
+	            
+	            try {
+	            	this.barrier.await();
+	            } catch(BrokenBarrierException ex) {}
+	            
+	            } catch (InterruptedException ex) {
+	                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+	            }
+	            
+	            
+	        }
         
             try {
                 this.barrier.await();
@@ -191,16 +190,17 @@ public class Nucleo implements Runnable {
             } catch (BrokenBarrierException ex) {
                 Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
             }
+    	}
     }
 	
 	public void ejecutarInstruccion() {
         //Bloque donde se encuentra la instruccion apuntada por el PC actual, previamente cargada
-
-		Bloque b = cacheInstrucciones[((this.colaEspera[1][hiloActual-1]+this.PC)/4)%this.BLOQUES];
+		
+		Bloque b = cacheInstrucciones[(this.bloqueInicio%this.BLOQUES + ((this.colaEspera[1][this.hiloActual]+this.PC)/4)%this.BLOQUES)%this.BLOQUES];
         //Intruccion del bloque (0|1|2|3) 
                 
 		//Pido instruccion al cache la guardo en el IR  
-		IR = b.getInstruccion((this.colaEspera[1][this.hiloActual-1]+PC)%4);
+		IR = b.getInstruccion((this.colaEspera[1][this.hiloActual]+PC)%4);
              
 		String[] codificacion = IR.split(" ");
 		System.out.println(codificacion[0]);
@@ -210,6 +210,10 @@ public class Nucleo implements Runnable {
         //Verifica cual operacion es
 		switch(codificacion[0]) {
 			case "8": //DADDI
+				if(registros[25]==-1) {
+					@SuppressWarnings("unused")
+					int d = 1;
+				}
 				registros[Integer.parseInt(codificacion[2])] =
 						registros[Integer.parseInt(codificacion[1])] + Integer.parseInt(codificacion[3]);
 			break;
