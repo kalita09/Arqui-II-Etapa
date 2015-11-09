@@ -17,7 +17,7 @@ import java.io.FileReader;
 public class Memoria {
 	Bloque[] memoria;
 	int numeroHilos;
-    int BLOQUES = 128;
+    int BLOQUES = 40;
     int bloque = 0;
     int posInicio;
     int inst = 0;
@@ -35,8 +35,7 @@ public class Memoria {
 	    for(int i=0; i<BLOQUES; i++) {
 	        memoria[i] = new Bloque(i);
 	        memoria[i].inicializarMemoria();
-
-		}
+            }
 	}
 	
 	//Copiar instrucciones del archivo a la memoria
