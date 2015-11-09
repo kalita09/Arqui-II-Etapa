@@ -114,7 +114,7 @@ public class Nucleo implements Runnable {
     }
 	
 	public boolean contenerBloque() {
-		//this.bloqueInicio + (this.colaEspera[1][this.hiloActual](Posicion de inicio del hilo(0,1,2 o 3)) + this.PC)/4 da la posición del bloque en memoria
+		//this.bloqueInicio + (this.colaEspera[1][this.hiloActual](Posicion de inicio del hilo(0,1,2 o 3)) + this.PC)/4 da la posicion del bloque en memoria
 		if(cacheInstrucciones[(this.bloqueInicio%this.BLOQUES + ((this.colaEspera[1][this.hiloActual] + this.PC)/4)%this.BLOQUES)%this.BLOQUES].getID() == (this.bloqueInicio +
 				(this.colaEspera[1][this.hiloActual] + this.PC)/4)) { // PC/4 nos da el numero de bloque
 				
