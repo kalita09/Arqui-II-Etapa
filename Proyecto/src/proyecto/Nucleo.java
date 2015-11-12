@@ -263,8 +263,15 @@ public class Nucleo implements Runnable {
 				this.terminado = true;
 				this.seguir = false;
 			break;
+                            
+                        case "35": //LW
+                            
 		}
+
 	}
+        public void leerMem(){
+        
+        }
 	
 }
 

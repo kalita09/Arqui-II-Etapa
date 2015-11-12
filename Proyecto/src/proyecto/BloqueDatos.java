@@ -13,14 +13,19 @@ public class BloqueDatos {
     
     int[] datos;
     int FILAS = 4;
-    
+    //numeración del propio bloque, del 40 en adelante
+    int serial;
+    //ID del bloque a contener
     int ID;
     //Modificado,Compartido Invàlido
     char estado;
     
     BloqueDatos(int id){
+        
     	this.ID = id;
         this.datos = new int[FILAS];
+        estado = 'I';
+        
     }
     
     
@@ -41,13 +46,17 @@ public class BloqueDatos {
 
         for(int i=0; i<FILAS; i++) {
             datos [i] = 0;
-
         }
 
     }
-    void getDato(int direccion){
+    void setDato(int palabra,int miDato){
         
+        this.datos[palabra] = miDato;
+    }
+    int getDato(int palabra){
         
+       return this.datos[palabra];
+       
     }
 
 }

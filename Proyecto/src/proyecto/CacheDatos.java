@@ -10,7 +10,7 @@ package proyecto;
  * @author b04732
  */
 public class CacheDatos {
-    int BLOQUES;
+    int BLOQUES = 8;
     BloqueDatos[] cacheDatos;	
     public CacheDatos(){
         this.cacheDatos = new BloqueDatos[BLOQUES];
@@ -22,19 +22,22 @@ public class CacheDatos {
 	}
         
     }
-    /*
-    public boolean contenerBloque(int direccion) {
+    
+    public boolean contenerBloque(int id) {
         
-            //this.bloqueInicio + (this.colaEspera[1][this.hiloActual](Posicion de inicio del hilo(0,1,2 o 3)) + this.PC)/4 da la posicion del bloque en memoria
-            if(cacheInstrucciones[(this.bloqueInicio%this.BLOQUES + ((this.colaEspera[1][this.hiloActual] + this.PC)/4)%this.BLOQUES)%this.BLOQUES].getID() == (this.bloqueInicio +
-                            (this.colaEspera[1][this.hiloActual] + this.PC)/4)) { // PC/4 nos da el numero de bloque
-
-
-
-                    return true;
-            }
+        if(this.cacheDatos[id%this.BLOQUES].ID==id){
+            //acierto, hit
+            return true;
+        }else{
             return false;
+        }
+     
     }
-    */
+    public void setBloque(BloqueDatos bloque) {
+        
+        this.cacheDatos[bloque.ID%this.BLOQUES]= bloque;
+   
+    }
+    
     
 }

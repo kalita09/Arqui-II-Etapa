@@ -19,11 +19,21 @@ public class MemoriaDatos {
     int length = 0;
         
 	public MemoriaDatos() {
-		this.memoria = new BloqueDatos[BLOQUES];
-           //this.inicializar();
-                
+            this.memoria = new BloqueDatos[BLOQUES];
+            this.inicializar();
                 
 	}
+        private void inicializar() { 
+            
+	    for(int i=0; i<BLOQUES; i++) {
+	        memoria[i] = new BloqueDatos(i);
+	        memoria[i].inicializarMemoriaDatos();
+            }
+	}
+        public BloqueDatos getBloque(int direccion) {
+            return this.memoria[direccion-640/this.BLOQUES];
+            
+        }
 
     
 }
