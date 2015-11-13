@@ -19,7 +19,7 @@ public class BloqueDatos {
     int ID;
     //Modificado,Compartido Invàlido
     char estado;
-    
+
     BloqueDatos(int id){
         
     	this.ID = id;
@@ -49,6 +49,7 @@ public class BloqueDatos {
         }
 
     }
+    
     void setDato(int palabra,int miDato){
         
         this.datos[palabra] = miDato;

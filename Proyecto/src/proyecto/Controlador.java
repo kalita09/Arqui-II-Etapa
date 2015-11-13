@@ -29,6 +29,8 @@ public class Controlador implements Runnable{
     Thread hilo1;
     Thread hilo2;
     static Semaphore busInstrucciones;
+    static Semaphore busDatos;
+    static Semaphore bloqueoCacheDatos;
     public boolean seguir;   
 	
     public Controlador(int tamanoCola,int quantum) {
@@ -44,6 +46,8 @@ public class Controlador implements Runnable{
 	    this.ciclosReloj = 0;
 	
 	    this.busInstrucciones = new Semaphore(1);
+            this.busDatos = new Semaphore(1);
+            this.bloqueoCacheDatos = new Semaphore(1);
 	    this.seguir = true;
 
 	}
@@ -71,9 +75,9 @@ public class Controlador implements Runnable{
         
         //iniciar vector de nucleos
         vectorNucleos[0] = new Nucleo("Nucleo 1",barrera,this.m,colaEspera[0][this.apuntadorCola],
-        		colaEspera[2][this.apuntadorCola],this.quantum,this.ciclosReloj,this.busInstrucciones, colaEspera, hiloActual1);
+        		colaEspera[2][this.apuntadorCola],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos,this.bloqueoCacheDatos, colaEspera, hiloActual1);
         vectorNucleos[1] = new Nucleo("Nucleo 2",barrera,this.m,colaEspera[0][this.apuntadorCola2],
-        		colaEspera[2][this.apuntadorCola2],this.quantum,this.ciclosReloj,this.busInstrucciones, colaEspera, hiloActual2);
+        		colaEspera[2][this.apuntadorCola2],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos,this.bloqueoCacheDatos, colaEspera, hiloActual2);
 
         //inicializo vector de contextos
         for(int i=0; i<numeroHilos; i++) {

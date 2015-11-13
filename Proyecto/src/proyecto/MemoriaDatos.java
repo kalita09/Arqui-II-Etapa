@@ -17,6 +17,9 @@ public class MemoriaDatos {
     int posInicio;
     int inst = 0;
     int length = 0;
+    int TAMANOBLOQUE =16;
+    int INCREMENTO=4;
+    int PALABRASBLOQUE=4;
         
 	public MemoriaDatos() {
             this.memoria = new BloqueDatos[BLOQUES];
@@ -31,9 +34,16 @@ public class MemoriaDatos {
             }
 	}
         public BloqueDatos getBloque(int direccion) {
-            return this.memoria[direccion-640/this.BLOQUES];
+            //numero de bloque (0-87) de la direccion 
+            return this.memoria[(direccion-640)/this.TAMANOBLOQUE];
             
         }
+        public BloqueDatos getpalabra(int direccion) {
+            //numero de palabra en el vector segun la direccion 0/1/2/3
+            return this.memoria[((direccion-640)/INCREMENTO)%PALABRASBLOQUE];
+            
+        }
+        
 
     
 }

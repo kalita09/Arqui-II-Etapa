@@ -10,7 +10,11 @@ package proyecto;
  * @author b04732
  */
 public class CacheDatos {
+    //tamano bloque en memoria principal de datos
+    int TAMANOBLOQUE =16;
     int BLOQUES = 8;
+    int INCREMENTO=4;
+    int PALABRASBLOQUE=4;
     BloqueDatos[] cacheDatos;	
     public CacheDatos(){
         this.cacheDatos = new BloqueDatos[BLOQUES];
@@ -23,9 +27,11 @@ public class CacheDatos {
         
     }
     
-    public boolean contenerBloque(int id) {
+    public boolean contenerBloque(int direccion) {
         
-        if(this.cacheDatos[id%this.BLOQUES].ID==id){
+        
+        if(this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES].ID==((direccion-640)/this.TAMANOBLOQUE)){
+            
             //acierto, hit
             return true;
         }else{
@@ -33,11 +39,23 @@ public class CacheDatos {
         }
      
     }
+    public int getDato(int direccion) {
+        
+        BloqueDatos bloque = this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
+        
+        return bloque.datos[((direccion-640)/INCREMENTO)%PALABRASBLOQUE];
+        
+    }
+    
     public void setBloque(BloqueDatos bloque) {
         
         this.cacheDatos[bloque.ID%this.BLOQUES]= bloque;
    
     }
-    
+    public BloqueDatos getBloque(int direccion) {
+
+        return this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
+
+    }
     
 }

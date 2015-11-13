@@ -19,9 +19,10 @@ public class Nucleo implements Runnable {
     //Contexto
 	int PC;
     int[] registros;
-    int numInstruccion;        
+    int numInstruccion; 
     String IR;
 	Bloque[] cacheInstrucciones;	
+        CacheDatos cacheDatos;
 	int BLOQUES;
 	int apuntadorCache;
 	int apuntadorBloques;
@@ -37,6 +38,8 @@ public class Nucleo implements Runnable {
     static int quantum;
     static int ciclosReloj;
     static Semaphore busInstrucciones;
+    static Semaphore busDatos;
+    static Semaphore bloqueoCacheDatos;
     int pcFin;
     boolean falloCache;
     int contCiclosFallo;
@@ -45,33 +48,45 @@ public class Nucleo implements Runnable {
     boolean desactivado;
     int colaEspera[][];
     int hiloActual;
+    //booleanos para comunicacion con el controlador sobre coherencia de datos
+    boolean revisarOtraCache;
+    boolean bloqueoCachePropia;
+    
+    
         
 	public Nucleo(String nombre, CyclicBarrier barrier,Memoria memoria,int bloqueInicio,int pcFin,
-		int quantum,int ciclosReloj, Semaphore busInstrucciones, int[][] colaEspera, int hiloActual) {
-		this.nombreNucleo = nombre;
-        this.barrier = barrier;
-		this.registros = new int[32];
-		this.BLOQUES = 8;
-		this.apuntadorCache = 0;
-		this.apuntadorBloques = 0;
-		this.cacheInstrucciones = new Bloque[BLOQUES];
-		this.pruebaHilo = 1;
-        this.memoria = memoria;
-        this.inicializarCaches();
-        this.bloqueInicio = bloqueInicio;
-        this.pcFin = pcFin;
-        this.seguir = true;
-        this.terminado = false;
-        Nucleo.quantum = quantum;
-        Nucleo.ciclosReloj = ciclosReloj;
-        Nucleo.busInstrucciones = busInstrucciones;
-        this.falloCache = false;
-        this.contCiclosFallo = 1;
-        this.esperandoBus = false;
-        this.apagado = false;
-        this.desactivado = false;
-        this.colaEspera = colaEspera;
-        this.hiloActual = hiloActual;
+		int quantum,int ciclosReloj, Semaphore busInstrucciones, Semaphore busDatos,Semaphore bloqueoCacheDatos,int[][] colaEspera, int hiloActual) {
+            this.nombreNucleo = nombre;
+            this.barrier = barrier;
+            this.registros = new int[32];
+            this.BLOQUES = 8;
+            this.apuntadorCache = 0;
+            this.apuntadorBloques = 0;
+            this.cacheInstrucciones = new Bloque[BLOQUES];
+            this.cacheDatos = new CacheDatos();
+            this.pruebaHilo = 1;
+
+            this.memoria = memoria;
+            this.inicializarCaches();
+            this.bloqueInicio = bloqueInicio;
+            this.pcFin = pcFin;
+            this.seguir = true;
+            this.terminado = false;
+            Nucleo.quantum = quantum;
+            Nucleo.ciclosReloj = ciclosReloj;
+            Nucleo.busInstrucciones = busInstrucciones;
+            Nucleo.busDatos = busDatos;
+            Nucleo.bloqueoCacheDatos = bloqueoCacheDatos;
+            this.falloCache = false;
+            this.contCiclosFallo = 1;
+            this.esperandoBus = false;
+            this.apagado = false;
+            this.desactivado = false;
+            this.colaEspera = colaEspera;
+            this.hiloActual = hiloActual;
+            
+            revisarOtraCache = false;
+            bloqueoCachePropia = false;
 	}
 	
 	private void inicializarCaches() {
@@ -161,6 +176,13 @@ public class Nucleo implements Runnable {
 	            } else {
 	            	esperandoBus = true;
 	                if(busInstrucciones.tryAcquire()){
+                            try {
+                                this.barrier.await();
+                            } catch (BrokenBarrierException ex) {
+                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                            } 
+                            
+                            
 	                	Bloque b1 = this.memoria.getBloque((this.bloqueInicio + (this.colaEspera[1][this.hiloActual] + this.PC)/4));                	
 	                	cargarBloque(b1);
 	                	System.out.print("cargando bloque: "+this.bloqueInicio+" PC:"+this.PC/4+". ");
@@ -265,12 +287,52 @@ public class Nucleo implements Runnable {
 			break;
                             
                         case "35": //LW
-                            
+                            int direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+                            //registros[Integer.parseInt(codificacion[2])] = this.loadWord(direccion);
 		}
 
 	}
-        public void leerMem(){
-        
+        public  int loadWord(int direccion){
+            boolean terminado = true;
+            
+            while(terminado){
+         
+                if(bloqueoCacheDatos.tryAcquire()){
+                    if((this.cacheDatos.contenerBloque(direccion)) ){
+                        
+                        
+                    //fallo    
+                    }else{
+                        if(busDatos.tryAcquire()){
+                            if(busDatos.tryAcquire()){
+                            }else{
+                            
+                            }
+                        
+                        }else{
+                            bloqueoCacheDatos.release();
+                            
+                        }
+                    
+                    }
+
+                }else{
+                
+                }   
+            
+            }
+            
+            
+            /*
+            if(   (this.cacheDatos.contenerBloque(direccion))    ){
+                //bloquer mi cache y leer
+                bloqueoCachePropia = true;
+                return this.cacheDatos.getDato(direccion);
+              
+               
+            }*/
+            return 0;
+         
         }
 	
 }
