@@ -48,6 +48,7 @@ public class CacheDatos {
     }
     
     public void setBloque(BloqueDatos bloque) {
+     
         
         this.cacheDatos[bloque.ID%this.BLOQUES]= bloque;
    

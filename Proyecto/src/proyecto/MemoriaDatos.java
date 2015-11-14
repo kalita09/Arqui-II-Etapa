@@ -38,6 +38,11 @@ public class MemoriaDatos {
             return this.memoria[(direccion-640)/this.TAMANOBLOQUE];
             
         }
+        public void setBloque(int direccion,BloqueDatos bloque) {
+            
+            this.memoria[(direccion-640)/this.TAMANOBLOQUE]=bloque;
+            
+        }
         public BloqueDatos getpalabra(int direccion) {
             //numero de palabra en el vector segun la direccion 0/1/2/3
             return this.memoria[((direccion-640)/INCREMENTO)%PALABRASBLOQUE];

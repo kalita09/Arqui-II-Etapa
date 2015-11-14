@@ -30,6 +30,7 @@ public class Nucleo implements Runnable {
     private CyclicBarrier barrier;
     int pruebaHilo;
     Memoria memoria;
+    MemoriaDatos memoriaDatos;
     int bloqueInicio;
     int bloqueFin;
     int posFin;
@@ -40,6 +41,7 @@ public class Nucleo implements Runnable {
     static Semaphore busInstrucciones;
     static Semaphore busDatos;
     static Semaphore bloqueoCacheDatos;
+    int direccion;
     int pcFin;
     boolean falloCache;
     int contCiclosFallo;
@@ -49,12 +51,13 @@ public class Nucleo implements Runnable {
     int colaEspera[][];
     int hiloActual;
     //booleanos para comunicacion con el controlador sobre coherencia de datos
-    boolean revisarOtraCache;
+    boolean revisarOtraCacheLW;
+    boolean revisarOtraCacheSW;
     boolean bloqueoCachePropia;
     
     
         
-	public Nucleo(String nombre, CyclicBarrier barrier,Memoria memoria,int bloqueInicio,int pcFin,
+	public Nucleo(String nombre, CyclicBarrier barrier,Memoria memoria,MemoriaDatos memoriaDatos,int bloqueInicio,int pcFin,
 		int quantum,int ciclosReloj, Semaphore busInstrucciones, Semaphore busDatos,Semaphore bloqueoCacheDatos,int[][] colaEspera, int hiloActual) {
             this.nombreNucleo = nombre;
             this.barrier = barrier;
@@ -67,6 +70,7 @@ public class Nucleo implements Runnable {
             this.pruebaHilo = 1;
 
             this.memoria = memoria;
+            this.memoriaDatos = memoriaDatos;
             this.inicializarCaches();
             this.bloqueInicio = bloqueInicio;
             this.pcFin = pcFin;
@@ -77,6 +81,7 @@ public class Nucleo implements Runnable {
             Nucleo.busInstrucciones = busInstrucciones;
             Nucleo.busDatos = busDatos;
             Nucleo.bloqueoCacheDatos = bloqueoCacheDatos;
+            this.direccion = -999;
             this.falloCache = false;
             this.contCiclosFallo = 1;
             this.esperandoBus = false;
@@ -85,7 +90,8 @@ public class Nucleo implements Runnable {
             this.colaEspera = colaEspera;
             this.hiloActual = hiloActual;
             
-            revisarOtraCache = false;
+            revisarOtraCacheLW = false;
+            revisarOtraCacheSW = false;
             bloqueoCachePropia = false;
 	}
 	
@@ -293,21 +299,32 @@ public class Nucleo implements Runnable {
 
 	}
         public  int loadWord(int direccion){
-            boolean terminado = true;
+            boolean terminado;
+            terminado = false;
             
-            while(terminado){
+            while(!terminado&&!bloqueoCachePropia){
          
                 if(bloqueoCacheDatos.tryAcquire()){
                     if((this.cacheDatos.contenerBloque(direccion)) ){
-                        
+                        return this.cacheDatos.getDato(direccion);   
                         
                     //fallo    
                     }else{
                         if(busDatos.tryAcquire()){
-                            if(busDatos.tryAcquire()){
-                            }else{
-                            
+                            //buscar el 
+                            this.direccion = direccion;
+                            this.revisarOtraCacheLW = true;
+                            this.revisarOtraCacheSW = true;
+                            try {
+                                this.barrier.await();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (BrokenBarrierException ex) {
+                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
                             }
+                            terminado = true;
+                            return this.cacheDatos.getDato(direccion);
+                            
                         
                         }else{
                             bloqueoCacheDatos.release();
@@ -316,22 +333,12 @@ public class Nucleo implements Runnable {
                     
                     }
 
-                }else{
-                
-                }   
+                }  
             
             }
-            
-            
-            /*
-            if(   (this.cacheDatos.contenerBloque(direccion))    ){
-                //bloquer mi cache y leer
-                bloqueoCachePropia = true;
-                return this.cacheDatos.getDato(direccion);
-              
-               
-            }*/
-            return 0;
+            direccion = -999;
+            return this.cacheDatos.getDato(direccion);
+           
          
         }
 	
