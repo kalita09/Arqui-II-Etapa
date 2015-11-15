@@ -33,8 +33,10 @@ public class Controlador implements Runnable{
     static Semaphore busDatos;
     static Semaphore bloqueoCacheDatos;
     public boolean seguir;   
+    Ventana ventana;
+    
 	
-    public Controlador(int tamanoCola,int quantum) {
+    public Controlador(int tamanoCola,int quantum,Ventana ventana) {
 	    colaEspera = new int[4][tamanoCola];
 	    this.vectorContextos = new Contexto [tamanoCola];
 	    this.vectorNucleos = new Nucleo [tamanoCola];
@@ -50,6 +52,7 @@ public class Controlador implements Runnable{
             this.busDatos = new Semaphore(1);
             this.bloqueoCacheDatos = new Semaphore(1);
 	    this.seguir = true;
+            this.ventana = ventana;
 
 	}
 	        
@@ -57,7 +60,7 @@ public class Controlador implements Runnable{
         this.memoriaInstrucciones = new Memoria();
         this.memoriaDatos = new MemoriaDatos();
         int bloque; //bloque donde inicia cada archivo (hilo)
-        
+            ventana.setVisible(true);
         //Guarda en cola donde inicia cada hilo
         for(int j = 1; j <= numeroHilos; j++ ){   
             bloque = memoriaInstrucciones.leerArchivo(j);
@@ -94,13 +97,17 @@ public class Controlador implements Runnable{
 
         System.out.println("Antes registro");
         for(int i=0; i<numNUCLEOS; i++) {
-                vectorNucleos[i].imprimirRegistros();
+               // vectorNucleos[i].imprimirRegistros();
+        ventana.jTextArea5.setText(vectorNucleos[i].imprimirRegistros());
         }
         
-        this.memoriaInstrucciones.imprimirMem();
+        //this.memoriaInstrucciones.imprimirMem();
+        ventana.jTextArea4.setText(this.memoriaInstrucciones.imprimirMem());
         System.out.println("Antes cache");
         for(int i=0; i<numNUCLEOS; i++) {
-                vectorNucleos[i].imprimirCache();
+                //vectorNucleos[i].imprimirCache();
+                ventana.jTextArea3.setText(vectorNucleos[i].imprimirCache());
+                
         }
         hilo1 = new Thread(vectorNucleos[0]);
         hilo2 = new Thread(vectorNucleos[1]);
@@ -182,16 +189,23 @@ public class Controlador implements Runnable{
         System.out.println("Quantum"+Nucleo.quantum);
         System.out.println("Ciclo reloj"+Nucleo.ciclosReloj);
         System.out.println("Despues registro");
-        for(int i=0; i<2; i++) {
-            System.out.println("Nucleo "+i);
-            vectorNucleos[i].imprimirRegistros();
-        }
+        
+       // for(int i=0; i<2; i++) {
+          //  System.out.println("Nucleo "+i);
+            //vectorNucleos[i].imprimirRegistros();
+            ventana.jTextArea5.setText(vectorNucleos[0].imprimirRegistros());
+            ventana.jTextArea6.setText(vectorNucleos[1].imprimirRegistros());
             
-        this.memoriaInstrucciones.imprimirMem();
+       // }
+        
+            
+        //this.memoriaInstrucciones.imprimirMem();
+        ventana.jTextArea4.setText(this.memoriaInstrucciones.imprimirMem());
         System.out.println("Despues cache");
         for(int i=0; i<2; i++){ 
             System.out.println("Nucleo "+i);
-            vectorNucleos[i].imprimirCache();
+            //vectorNucleos[i].imprimirCache();
+            ventana.jTextArea3.setText(vectorNucleos[i].imprimirCache());
         }
             
         if((vectorNucleos[0].terminado) && (!vectorNucleos[0].desactivado)) { //nucleo 1 termino su hilo
@@ -372,7 +386,7 @@ public class Controlador implements Runnable{
 	            	this.vectorNucleos[0].apagado = true;
 	            	this.vectorNucleos[0].apagado = true;
                 	seguir = false;
-                	System.exit(0);
+                	//System.exit(0);
 
 	            }
 	                

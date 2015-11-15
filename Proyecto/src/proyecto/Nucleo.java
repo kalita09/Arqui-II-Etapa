@@ -117,21 +117,27 @@ public class Nucleo implements Runnable {
             this.pcFin = mipcFin;
         }
 	
-	public void imprimirCache(){
-        for(int bloque = 0; bloque < 8; bloque++ ){
-            System.out.print("BLoque "+bloque +" ");
-            this.cacheInstrucciones[bloque].imprimir();
+	public String imprimirCache(){
+            String cadena;
+            cadena = "";
+            for(int bloque = 0; bloque < 8; bloque++ ){
+               // System.out.print("BLoque "+bloque +" ");
+                 cadena +=this.cacheInstrucciones[bloque].imprimir();
 
+            }
+        return cadena;
         }
-    }
 
-	public void imprimirRegistros(){
+	public String imprimirRegistros(){
+        String cadena;
+        cadena = "";
         for(int registro = 0; registro < 32; registro++ ){
             System.out.print("Registro "+registro +" "+this.registros[registro]);
-            
+             cadena +="Registro "+Integer.toString(registro) +" "+Integer.toString(this.registros[registro])+"\n";
 
         }
-        System.out.println("H");
+        cadena += "\n";
+        return cadena;
     }
 	
 	public boolean contenerBloque() {

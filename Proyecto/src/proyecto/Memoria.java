@@ -98,13 +98,16 @@ public class Memoria {
     return bloqueInicio;   
 	}
 	
-	public void imprimirMem(){
+	public String imprimirMem(){
+            String cadena;
+            cadena = "";
 	    for(int bloque = 0; bloque < 40; bloque++ ){
-	        System.out.print("BLoque "+bloque +" ");
-	                this.memoria[bloque].imprimir();
+	        //System.out.print("BLoque "+bloque +" ");
+	                cadena +=this.memoria[bloque].imprimir();
 	                
 	            }
-	        }
+             return cadena;
+	}
 	public int getPosicion(){
 	            return this.posInicio;
         }

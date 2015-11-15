@@ -59,4 +59,15 @@ public class CacheDatos {
 
     }
     
+    public String imprimir(){
+        String cadena;
+        cadena = "";
+        for(int i=0;i<this.BLOQUES;i++){
+            cadena+=cacheDatos[i].imprimir();
+
+        }
+        
+        return cadena;
+    }
+    
 }

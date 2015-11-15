@@ -73,16 +73,20 @@ public class Bloque {
 
     }
     
-    void imprimir(){
+    String imprimir(){
+        String cadena;
+        cadena = "";
         for(int i=0; i<FILAS; i++) {
 
             for(int j=0; j<COLUMNAS; j++) {
-
-            System.out.print(" "+instrucciones [i][j]);
+            cadena += " "+Integer.toString(instrucciones [i][j]);
+            //System.out.print(" "+instrucciones [i][j]);
 
            }
         }
-        System.out.print("\n");
+        //System.out.print("\n");
+        cadena += "\n";
+        return cadena;
     }
     
     /*En la matriz 4x4 que pertenece a un bloque busca 

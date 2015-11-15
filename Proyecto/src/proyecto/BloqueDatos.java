@@ -59,5 +59,15 @@ public class BloqueDatos {
        return this.datos[palabra];
        
     }
+    public String imprimir(){
+        String cadena;
+        cadena = "";
+        for(int i=0;i<this.FILAS;i++){
+            cadena += Integer.toString(this.datos[i])+" ";
+
+        }
+        cadena += "\n";
+        return cadena;
+    }
 
 }
