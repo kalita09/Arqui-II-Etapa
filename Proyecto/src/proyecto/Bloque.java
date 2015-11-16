@@ -73,7 +73,7 @@ public class Bloque {
 
     }
     
-    String imprimir(){
+    public String imprimir(){
         String cadena;
         cadena = "";
         for(int i=0; i<FILAS; i++) {

@@ -28,9 +28,9 @@ public class CacheDatos {
     }
     
     public boolean contenerBloque(int direccion) {
-        
-        
-        if(this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES].ID==((direccion-640)/this.TAMANOBLOQUE)){
+        //Busca el bloque de datos correspondiente en la cache
+        BloqueDatos b = this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
+        if((b.ID == ((direccion-640)/this.TAMANOBLOQUE)) && (b.estado != 'I')){
             
             //acierto, hit
             return true;

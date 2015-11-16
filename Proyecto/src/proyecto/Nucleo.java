@@ -40,7 +40,7 @@ public class Nucleo implements Runnable {
     static int ciclosReloj;
     static Semaphore busInstrucciones;
     static Semaphore busDatos;
-    static Semaphore bloqueoCacheDatos;
+    Semaphore bloqueoCacheDatos;
     int direccion;
     int pcFin;
     boolean falloCache;
@@ -53,8 +53,8 @@ public class Nucleo implements Runnable {
     //booleanos para comunicacion con el controlador sobre coherencia de datos
     boolean revisarOtraCacheLW;
     boolean revisarOtraCacheSW;
-    boolean bloqueoCachePropia;
-    
+    //boolean bloqueoCachePropia;
+    boolean datoCargado;
     
         
 	public Nucleo(String nombre, CyclicBarrier barrier,Memoria memoria,MemoriaDatos memoriaDatos,int bloqueInicio,int pcFin,
@@ -80,7 +80,7 @@ public class Nucleo implements Runnable {
             Nucleo.ciclosReloj = ciclosReloj;
             Nucleo.busInstrucciones = busInstrucciones;
             Nucleo.busDatos = busDatos;
-            Nucleo.bloqueoCacheDatos = bloqueoCacheDatos;
+            bloqueoCacheDatos = bloqueoCacheDatos;
             this.direccion = -999;
             this.falloCache = false;
             this.contCiclosFallo = 1;
@@ -89,10 +89,11 @@ public class Nucleo implements Runnable {
             this.desactivado = false;
             this.colaEspera = colaEspera;
             this.hiloActual = hiloActual;
-            
+            this.datoCargado = false;
+			
             revisarOtraCacheLW = false;
             revisarOtraCacheSW = false;
-            bloqueoCachePropia = false;
+            //bloqueoCachePropia = false;
 	}
 	
 	private void inicializarCaches() {
@@ -298,12 +299,82 @@ public class Nucleo implements Runnable {
 				this.seguir = false;
 			break;
                             
-                        case "35": //LW
-                            int direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-                            //registros[Integer.parseInt(codificacion[2])] = this.loadWord(direccion);
-                        case "43": //SW
-                            int direccion2 = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-                           // storeWord(,registros[Integer.parseInt(codificacion[1])]);
+			case "35": //LW
+            	boolean terminoLoad = false;
+            	int palabra;
+	        	while(!terminoLoad) {
+		        	if(bloqueoCacheDatos.tryAcquire()){
+		        		try {
+		                    this.barrier.await();
+		                } catch (InterruptedException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                } catch (BrokenBarrierException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                }
+		        	
+		        		if((this.cacheDatos.contenerBloque(direccion)) ){
+		        	    	palabra = this.cacheDatos.getDato(direccion);
+		        	    	registros[Integer.parseInt(codificacion[2])] = palabra;
+		        	    	bloqueoCacheDatos.release();
+		        		} else {
+		        			if(busDatos.tryAcquire()) {
+			        			try {
+				                    this.barrier.await();
+				                } catch (InterruptedException ex) {
+				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+				                } catch (BrokenBarrierException ex) {
+				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+				                }
+			        			this.revisarOtraCacheLW = true;
+			        						        
+			        			while(!datoCargado) {
+			        				try {
+					                    this.barrier.await();
+					                } catch (InterruptedException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                } catch (BrokenBarrierException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                }
+			        			}
+			        			//Controlador se encarga de bloquear la otra cache
+			        			
+			        			palabra = this.cacheDatos.getDato(direccion);
+				        		int direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
+				        		registros[Integer.parseInt(codificacion[2])] = palabra;
+				        		bloqueoCacheDatos.release();
+				        		terminado = true;
+				        		
+			        		} else {
+			        			bloqueoCacheDatos.release();
+			        			try {
+				                    this.barrier.await();
+				                } catch (InterruptedException ex) {
+				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+				                } catch (BrokenBarrierException ex) {
+				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+				                }
+			        		}
+		        		}
+		        		
+		        		
+		        	} else {
+		        		try {
+		                    this.barrier.await();
+		                } catch (InterruptedException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                } catch (BrokenBarrierException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                }
+		        	}
+		        
+		        	
+		        	
+	        	}
+				break;
+				
+				case "43": //SW
+					int direccion2 = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+				   // storeWord(,registros[Integer.parseInt(codificacion[1])]);
                             
 		}
 
