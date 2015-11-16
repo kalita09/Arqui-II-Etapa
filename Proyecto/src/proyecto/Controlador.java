@@ -26,6 +26,9 @@ public class Controlador implements Runnable{
     Nucleo[] vectorNucleos;
     int quantum;
     int ciclosReloj;
+    int m;
+    int b;
+    boolean lento;
     static int numNUCLEOS = 2;
     Thread hilo1;
     Thread hilo2;
@@ -36,7 +39,7 @@ public class Controlador implements Runnable{
     Ventana ventana;
     
 	
-    public Controlador(int tamanoCola,int quantum,Ventana ventana) {
+    public Controlador(int tamanoCola,int quantum,int m,int b,boolean lento,Ventana ventana) {
 	    colaEspera = new int[4][tamanoCola];
 	    this.vectorContextos = new Contexto [tamanoCola];
 	    this.vectorNucleos = new Nucleo [tamanoCola];
@@ -47,7 +50,9 @@ public class Controlador implements Runnable{
 	    hiloActual2 = 1;
 	    this.quantum = quantum;
 	    this.ciclosReloj = 0;
-	
+            this.m = m;
+            this.b = b;
+            this.lento = lento;
 	    this.busInstrucciones = new Semaphore(1);
             this.busDatos = new Semaphore(1);
             this.bloqueoCacheDatos = new Semaphore(1);
@@ -178,16 +183,20 @@ public class Controlador implements Runnable{
     @Override
      public void run() {
         System.out.println("Todos han llegado a la barrera");
-        
+        Nucleo.ciclosReloj++;
+        this.ventana.jLabel9.setText(Integer.toString(Nucleo.ciclosReloj));
+        this.ventana.jLabel10.setText(Integer.toString(Nucleo.quantum));
+        this.ventana.jLabel11.setText(Integer.toString(vectorNucleos[0].hiloActual));
+        this.ventana.jLabel12.setText(Integer.toString(vectorNucleos[1].hiloActual));
         //si no estan en fallo de cache los dos nucleos entraron en el 
         //primer caso del if donde ejecutan una instruccion, por lo tanto se resta quantum
         if(!vectorNucleos[0].esperandoBus || !vectorNucleos[1].esperandoBus){
             Nucleo.quantum--;
         }
-        Nucleo.ciclosReloj++;
+
+        //System.out.println("Quantum"+Nucleo.quantum);
+        //System.out.println("Ciclo reloj"+Nucleo.ciclosReloj);
         
-        System.out.println("Quantum"+Nucleo.quantum);
-        System.out.println("Ciclo reloj"+Nucleo.ciclosReloj);
         System.out.println("Despues registro");
         
        // for(int i=0; i<2; i++) {
@@ -389,6 +398,14 @@ public class Controlador implements Runnable{
                 	//System.exit(0);
 
 	            }
+                    if(this.lento==true){
+                    try {
+                        Thread.sleep(5000);
+                     
+                        
+                    } catch (Exception e) {
+                        }
+                    }
 	                
     }
 }
