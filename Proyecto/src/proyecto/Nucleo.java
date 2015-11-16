@@ -61,7 +61,7 @@ public class Nucleo implements Runnable {
 		int quantum,int ciclosReloj, Semaphore busInstrucciones, Semaphore busDatos,Semaphore bloqueoCacheDatos,int[][] colaEspera, int hiloActual) {
             this.nombreNucleo = nombre;
             this.barrier = barrier;
-            this.registros = new int[32];
+            this.registros = new int[33];
             this.BLOQUES = 8;
             this.apuntadorCache = 0;
             this.apuntadorBloques = 0;
@@ -301,6 +301,10 @@ public class Nucleo implements Runnable {
                         case "35": //LW
                             int direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
                             //registros[Integer.parseInt(codificacion[2])] = this.loadWord(direccion);
+                        case "43": //SW
+                            int direccion2 = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+                           // storeWord(,registros[Integer.parseInt(codificacion[1])]);
+                            
 		}
 
 	}
@@ -346,6 +350,9 @@ public class Nucleo implements Runnable {
             return this.cacheDatos.getDato(direccion);
            
          
+        }
+        public  void storeWord(int direccion){
+        
         }
 	
 }
