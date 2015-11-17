@@ -39,6 +39,7 @@ public class Controlador implements Runnable{
     public boolean seguir;   
     Ventana ventana;
     public boolean nucleo1BloqueoCache2;
+    public boolean nucleo2BloqueoCache1;
 	
     public Controlador(int tamanoCola,int quantum,int m,int b,boolean lento,Ventana ventana) {
 	    colaEspera = new int[4][tamanoCola];
@@ -58,7 +59,8 @@ public class Controlador implements Runnable{
             this.busDatos = new Semaphore(1);
 	    this.seguir = true;
             this.ventana = ventana;
-
+            this.nucleo1BloqueoCache2 = false ;
+            this.nucleo2BloqueoCache1 = false;
 	}
 	        
     void iniciar(){
@@ -314,33 +316,46 @@ public class Controlador implements Runnable{
 		                            this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 		                            this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		                        }
+                            nucleo1BloqueoCache2 = false;
+                            vectorNucleos[1].bloqueoCacheDatos.release();
+                            Nucleo.busDatos.release();
+                                        
                     	}
                     
                     //si nucleo 2 esta pidiendo si alguien tiene el bloque que ocupa
                     }else if(this.vectorNucleos[1].revisarOtraCacheLW){
-                        if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
-                            if(  this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'M'){
-                                //copiar a mem y cache
-                                BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
-                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
-                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
-                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
-                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
+                    	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
+                    		nucleo2BloqueoCache1 = true;
+                    		
+                    	} else if(nucleo2BloqueoCache1) {
+		                        if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
+		                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'M'){
+		                                //copiar a mem y cache
+		                                BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
+		                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
+		                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
+		                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
+		                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
+		                            
+		                            //estado==C
+		                            }else {
+		                                
+		                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
+		                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
+		                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
+		
+		                            }
+		                        //estado==C
+		                        }else{
+		                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
+		                            this.vectorNucleos[1].cacheDatos.setBloque(bloque);
+		                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
+		                        }
+                            nucleo2BloqueoCache1 = false;
+                            vectorNucleos[0].bloqueoCacheDatos.release();
+                            Nucleo.busDatos.release();
                             
-                            }else if (this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'C'){
-                                
-                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
-                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
-                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
-
-                            }
-                        }else{
-                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
-                            this.vectorNucleos[1].cacheDatos.setBloque(bloque);
-                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
-                        }
-                        
-                    
+                    	}
                     
                     }
                     //STORE WORD
