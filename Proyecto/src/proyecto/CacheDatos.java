@@ -47,6 +47,14 @@ public class CacheDatos {
         
     }
     
+	public void setDato(int direccion, int dato) {
+	        
+        BloqueDatos bloque = this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
+	        
+        bloque.datos[((direccion-640)/INCREMENTO)%PALABRASBLOQUE] = dato;
+	        
+	    }
+    
     public void setBloque(BloqueDatos bloque) {
      
         

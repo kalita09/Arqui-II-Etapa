@@ -8,6 +8,8 @@ package proyecto;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author b04732 & a96097
@@ -34,7 +36,6 @@ public class Controlador implements Runnable{
     Thread hilo2;
     static Semaphore busInstrucciones;
     static Semaphore busDatos;
-    static Semaphore bloqueoCacheDatos;
     public boolean seguir;   
     Ventana ventana;
     public boolean nucleo1BloqueoCache2;
@@ -55,7 +56,6 @@ public class Controlador implements Runnable{
             this.lento = lento;
 	    this.busInstrucciones = new Semaphore(1);
             this.busDatos = new Semaphore(1);
-            this.bloqueoCacheDatos = new Semaphore(1);
 	    this.seguir = true;
             this.ventana = ventana;
 
@@ -84,9 +84,9 @@ public class Controlador implements Runnable{
         
         //iniciar vector de nucleos
         vectorNucleos[0] = new Nucleo("Nucleo 1",barrera,this.memoriaInstrucciones,this.memoriaDatos,colaEspera[0][this.apuntadorCola],
-        		colaEspera[2][this.apuntadorCola],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos,this.bloqueoCacheDatos, colaEspera, hiloActual1);
+        		colaEspera[2][this.apuntadorCola],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos, colaEspera, hiloActual1);
         vectorNucleos[1] = new Nucleo("Nucleo 2",barrera,this.memoriaInstrucciones,this.memoriaDatos,colaEspera[0][this.apuntadorCola2],
-        		colaEspera[2][this.apuntadorCola2],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos,this.bloqueoCacheDatos, colaEspera, hiloActual2);
+        		colaEspera[2][this.apuntadorCola2],this.quantum,this.ciclosReloj,this.busInstrucciones,this.busDatos, colaEspera, hiloActual2);
 
         //inicializo vector de contextos
         for(int i=0; i<numeroHilos; i++) {
@@ -287,7 +287,7 @@ public class Controlador implements Runnable{
                     //LOAD WORD
                     
                     if(this.vectorNucleos[0].revisarOtraCacheLW) {
-                    	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
+                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
                     		nucleo1BloqueoCache2 = true;
                     		
                     	} else if(nucleo1BloqueoCache2) {
@@ -308,6 +308,7 @@ public class Controlador implements Runnable{
 		                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		
 		                            }
+		                        //estado==C
 		                        }else{
 		                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 		                            this.vectorNucleos[0].cacheDatos.setBloque(bloque);
@@ -343,26 +344,35 @@ public class Controlador implements Runnable{
                     
                     }
                     //STORE WORD
-                    if(this.vectorNucleos[0].revisarOtraCacheSW) {                       
+                    if(this.vectorNucleos[0].revisarOtraCacheSW) {
+                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
+                    		nucleo1BloqueoCache2 = true;
                         if((this.vectorNucleos[1].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion))){
                             if(  this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M'){
                                 //copiar a mem y cache
                                 BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
                                 this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque);
+                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
                                 this.vectorNucleos[0].cacheDatos.setBloque(bloque);
                                 this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
-                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
-                            
-                            }else if (this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'C'){
                                 
+                            //estado == 'C' en la otra cache
+                            }else {
+                            	this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
                                 BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
                                 this.vectorNucleos[0].cacheDatos.setBloque(bloque);
-                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
+                                vectorNucleos[1].bloqueoCacheDatos.release();
+                                this.busDatos.release();
+                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 
                             }
+                            
+                        //Fallo otra cache
                         }else{
+                        	
                             BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
                             this.vectorNucleos[0].cacheDatos.setBloque(bloque);
+                            this.busDatos.release();
                             this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
                         }
                     
@@ -392,14 +402,19 @@ public class Controlador implements Runnable{
                         
                     
                     
-                    }                    
+                    }
+                    
+    }
                     
                     
 	            if(this.vectorNucleos[0].desactivado && this.vectorNucleos[1].desactivado) {
 	            	this.vectorNucleos[0].apagado = true;
 	            	this.vectorNucleos[0].apagado = true;
                 	seguir = false;
-                	//System.exit(0);
+                	int res = JOptionPane.showConfirmDialog(null, "Desea salir del programa?");
+                	if(res == JOptionPane.YES_OPTION) {
+                		System.exit(0);
+                	}
 
 	            }
                     if(this.lento==true){

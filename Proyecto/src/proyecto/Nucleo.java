@@ -55,10 +55,11 @@ public class Nucleo implements Runnable {
     boolean revisarOtraCacheSW;
     //boolean bloqueoCachePropia;
     boolean datoCargado;
+    boolean leerBloqueOtraCache;
     
         
 	public Nucleo(String nombre, CyclicBarrier barrier,Memoria memoria,MemoriaDatos memoriaDatos,int bloqueInicio,int pcFin,
-		int quantum,int ciclosReloj, Semaphore busInstrucciones, Semaphore busDatos,Semaphore bloqueoCacheDatos,int[][] colaEspera, int hiloActual) {
+		int quantum,int ciclosReloj, Semaphore busInstrucciones, Semaphore busDatos,int[][] colaEspera, int hiloActual) {
             this.nombreNucleo = nombre;
             this.barrier = barrier;
             this.registros = new int[33];
@@ -80,7 +81,7 @@ public class Nucleo implements Runnable {
             Nucleo.ciclosReloj = ciclosReloj;
             Nucleo.busInstrucciones = busInstrucciones;
             Nucleo.busDatos = busDatos;
-            bloqueoCacheDatos = bloqueoCacheDatos;
+            bloqueoCacheDatos = new Semaphore(1);
             this.direccion = -999;
             this.falloCache = false;
             this.contCiclosFallo = 1;
@@ -90,6 +91,7 @@ public class Nucleo implements Runnable {
             this.colaEspera = colaEspera;
             this.hiloActual = hiloActual;
             this.datoCargado = false;
+            this.leerBloqueOtraCache = false;
 			
             revisarOtraCacheLW = false;
             revisarOtraCacheSW = false;
@@ -299,6 +301,7 @@ public class Nucleo implements Runnable {
 				this.seguir = false;
 			break;
                             
+			//SETEAR BOOLEANOS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			case "35": //LW
             	boolean terminoLoad = false;
             	int palabra;
@@ -312,6 +315,7 @@ public class Nucleo implements Runnable {
 		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
 		                }
 		        	
+		        		direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
 		        		if((this.cacheDatos.contenerBloque(direccion)) ){
 		        	    	palabra = this.cacheDatos.getDato(direccion);
 		        	    	registros[Integer.parseInt(codificacion[2])] = palabra;
@@ -373,13 +377,83 @@ public class Nucleo implements Runnable {
 				break;
 				
 				case "43": //SW
-					int direccion2 = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-				   // storeWord(,registros[Integer.parseInt(codificacion[1])]);
+					boolean terminoStore = false;
+					//int palabra1;
+					direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+					while(!terminoStore) {
+						if(bloqueoCacheDatos.tryAcquire()){
+							try {
+			                    this.barrier.await();
+			                } catch (InterruptedException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                } catch (BrokenBarrierException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                }
+							
+							//Hit
+							if((this.cacheDatos.contenerBloque(direccion))){
+								BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
+								bloqueDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
+								if(this.cacheDatos.getBloque(direccion).estado == 'M') {
+									this.cacheDatos.setBloque(this.cacheDatos.getBloque(direccion));
+									bloqueoCacheDatos.release();
+								} else {
+									if(busDatos.tryAcquire()) {
+					        			try {
+						                    this.barrier.await();
+						                } catch (InterruptedException ex) {
+						                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+						                } catch (BrokenBarrierException ex) {
+						                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+						                }
+					        			this.revisarOtraCacheSW = true;
+					        			
+					        			while(!leerBloqueOtraCache) {
+					        				try {
+							                    this.barrier.await();
+							                } catch (InterruptedException ex) {
+							                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+							                } catch (BrokenBarrierException ex) {
+							                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+							                }
+					        			}
+					        								        					        								        			
+									}
+									
+								}
+								
+							//Fallo
+			        		} else {
+			        			if(busDatos.tryAcquire()) {
+				        			try {
+					                    this.barrier.await();
+					                } catch (InterruptedException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                } catch (BrokenBarrierException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                }
+			        			}
+			        			this.revisarOtraCacheSW = true;
+			        			while(!leerBloqueOtraCache) {
+			        				try {
+					                    this.barrier.await();
+					                } catch (InterruptedException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                } catch (BrokenBarrierException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                }
+			        			}
+			        		}
+							
+							
+						}
+					}
+						
                             
 		}
 
 	}
-        public  int loadWord(int direccion){
+        /*public  int loadWord(int direccion){
             boolean terminado;
             terminado = false;
             
@@ -421,7 +495,7 @@ public class Nucleo implements Runnable {
             return this.cacheDatos.getDato(direccion);
            
          
-        }
+        }*/
         public  void storeWord(int direccion){
         
         }
