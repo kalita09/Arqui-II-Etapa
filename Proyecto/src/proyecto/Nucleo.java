@@ -379,8 +379,10 @@ public class Nucleo implements Runnable {
 					boolean terminoStore = false;
 					//int palabra1;
 					direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+					
+					//Ciclo hasta que pueda bloquear la cache propia y el bus
 					while(!terminoStore) {
-						if(bloqueoCacheDatos.tryAcquire()){
+						if(bloqueoCacheDatos.tryAcquire()) {
 							try {
 			                    this.barrier.await();
 			                } catch (InterruptedException ex) {
@@ -390,39 +392,56 @@ public class Nucleo implements Runnable {
 			                }
 							
 							//Hit
-							if((this.cacheDatos.contenerBloque(direccion))){
+							if((this.cacheDatos.contenerBloque(direccion)) && (this.cacheDatos.getBloque(direccion).estado == 'M')){
 								BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
 								bloqueDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-								if(this.cacheDatos.getBloque(direccion).estado == 'M') {
-									this.cacheDatos.setBloque(this.cacheDatos.getBloque(direccion));
-									bloqueoCacheDatos.release();
-								} else {
-									if(busDatos.tryAcquire()) {
-					        			try {
+								//if(this.cacheDatos.getBloque(direccion).estado == 'M') {
+								this.cacheDatos.setBloque(bloqueDatos);
+								bloqueoCacheDatos.release();
+								terminoStore = true;
+									
+							//Tengo el bloque compartido o hay fallo
+							} else {
+								if(busDatos.tryAcquire()) {
+				        			try {
+					                    this.barrier.await();
+					                } catch (InterruptedException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                } catch (BrokenBarrierException ex) {
+					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+					                }
+				        			
+				        			//Solicitar la otra cache
+				        			this.revisarOtraCacheSW = true;
+				        			
+				        			this.leerBloqueOtraCache = false;
+				        			//Espera hasta que se haya leido el bloque en la otra cache para continuar
+				        			while(!leerBloqueOtraCache) {
+				        				try {
 						                    this.barrier.await();
 						                } catch (InterruptedException ex) {
 						                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
 						                } catch (BrokenBarrierException ex) {
 						                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
 						                }
-					        			this.revisarOtraCacheSW = true;
-					        			
-					        			while(!leerBloqueOtraCache) {
-					        				try {
-							                    this.barrier.await();
-							                } catch (InterruptedException ex) {
-							                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-							                } catch (BrokenBarrierException ex) {
-							                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-							                }
-					        			}
-					        								        					        								        			
-									}
-									
+				        			}
+				        			
+				        			busDatos.release();
+				        			BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
+									cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
+									this.cacheDatos.setBloque(bloqueDatos);
+									bloqueoCacheDatos.release();
+				        			terminoStore = true;
+				        			
+				        		//Bus ocupado	
+								}else {
+									this.bloqueoCacheDatos.release();
 								}
 								
+							}
+								
 							//Fallo
-			        		} else {
+			        		/*} else {
 			        			if(busDatos.tryAcquire()) {
 				        			try {
 					                    this.barrier.await();
@@ -442,7 +461,7 @@ public class Nucleo implements Runnable {
 					                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
 					                }
 			        			}
-			        		}
+			        		}*/
 							
 							
 						}
