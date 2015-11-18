@@ -212,6 +212,7 @@ public class Controlador implements Runnable{
             
         //this.memoriaInstrucciones.imprimirMem();
         ventana.jTextArea4.setText(this.memoriaInstrucciones.imprimirMem());
+        ventana.jTextArea2.setText(this.memoriaDatos.imprimirMem());
         
     
         ventana.jTextArea3.setText(vectorNucleos[0].imprimirCache());
