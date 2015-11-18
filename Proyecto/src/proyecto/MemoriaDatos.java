@@ -49,6 +49,16 @@ public class MemoriaDatos {
             
         }
         
+        public String imprimirMem(){
+            String cadena;
+            cadena = "";
+	    for(int bloque = 0; bloque < 88; bloque++ ){
+	        //System.out.print("BLoque "+bloque +" ");
+	                cadena +=this.memoria[bloque].imprimir();
+	                
+	            }
+             return cadena;
+	}
 
     
 }

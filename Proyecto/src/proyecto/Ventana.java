@@ -295,7 +295,7 @@ public class Ventana extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     public javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
+    public javax.swing.JTextArea jTextArea2;
     public javax.swing.JTextArea jTextArea3;
     public javax.swing.JTextArea jTextArea4;
     public javax.swing.JTextArea jTextArea5;
