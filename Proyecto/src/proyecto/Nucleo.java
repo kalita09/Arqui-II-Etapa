@@ -503,6 +503,14 @@ public class Nucleo implements Runnable {
 			        		}*/
 							
 							
+						} else {
+							try {
+			                    this.barrier.await();
+			                } catch (InterruptedException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                } catch (BrokenBarrierException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                }
 						}
 					}
 					break;

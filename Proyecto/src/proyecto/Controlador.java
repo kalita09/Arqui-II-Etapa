@@ -392,6 +392,7 @@ public class Controlador implements Runnable{
 	                                nucleo1BloqueoCache2 = false;
 	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
+	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
                                 
                                 //Cache del nucleo 2 tiene el bloque compartido
                     			}else {
