@@ -13,8 +13,8 @@ public class Contexto {
 	int PC;
     int[] registros;
     Contexto(){
-        this.registros = new int[32];
-        for(int i = 0; i < 32; i++){
+        this.registros = new int[33];
+        for(int i = 0; i < 33; i++){
             this.registros[i] = 0;
         }
         int PC = 0;

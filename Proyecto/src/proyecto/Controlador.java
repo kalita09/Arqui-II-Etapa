@@ -42,7 +42,8 @@ public class Controlador implements Runnable{
     public boolean nucleo2BloqueoCache1;
 	
     public Controlador(int tamanoCola,int quantum,int m,int b,boolean lento,Ventana ventana) {
-	    colaEspera = new int[4][tamanoCola];
+	    
+            colaEspera = new int[4][tamanoCola];
 	    this.vectorContextos = new Contexto [tamanoCola];
 	    this.vectorNucleos = new Nucleo [tamanoCola];
 	    numeroHilos = tamanoCola;
@@ -285,6 +286,18 @@ public class Controlador implements Runnable{
 	                    Nucleo.quantum = this.quantum;	                
 	                        	                        
 	                 }
+                        
+                        
+                         //revisar si hay LL activo
+                        if(this.vectorNucleos[0].banderaLL){
+                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+                                this.vectorNucleos[0].registros[32] = -1;
+                            }
+                        }else if(this.vectorNucleos[1].banderaLL){
+                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                this.vectorNucleos[1].registros[32] = -1;
+                            }
+                        }
 	                
 	            }
                     
@@ -388,6 +401,18 @@ public class Controlador implements Runnable{
                     				//copiar a memoria y cache de nucleo 1
                     				BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
 	                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque);
+                                        
+                                        //revisar si hay LL activo
+                                        if(this.vectorNucleos[0].banderaLL){
+                                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+                                                this.vectorNucleos[0].registros[32] = -1;
+                                            }
+                                        }else if(this.vectorNucleos[1].banderaLL){
+                                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                                this.vectorNucleos[1].registros[32] = -1;
+                                            }
+                                        }
+                                        
 	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
 	                                this.vectorNucleos[1].bloqueoCacheDatos.release();
 	                                nucleo1BloqueoCache2 = false;
@@ -397,16 +422,26 @@ public class Controlador implements Runnable{
                                 
                                 //Cache del nucleo 2 tiene el bloque compartido
                     			}else {
+                                            //revisar si hay LL activo
+                                            if(this.vectorNucleos[0].banderaLL){
+                                                if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+                                                    this.vectorNucleos[0].registros[32] = -1;
+                                                }
+                                            }else if(this.vectorNucleos[1].banderaLL){
+                                                if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                                    this.vectorNucleos[1].registros[32] = -1;
+                                                }
+                                            }
                     				
-                    				//Subir de memoria
-                    				this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
-	                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
-	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
-	                                vectorNucleos[1].bloqueoCacheDatos.release();
-	                                nucleo1BloqueoCache2 = false;
-	                                //this.busDatos.release();
-	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
-	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
+                                            //Subir de memoria
+                                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
+                                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
+                                            this.vectorNucleos[0].cacheDatos.setBloque(bloque);
+                                            vectorNucleos[1].bloqueoCacheDatos.release();
+                                            nucleo1BloqueoCache2 = false;
+                                            //this.busDatos.release();
+                                            this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
+                                            this.vectorNucleos[0].leerBloqueOtraCache = true;
                     			}
                             
                         //Fallo en ambas caches
@@ -445,6 +480,17 @@ public class Controlador implements Runnable{
                                 //copiar a memoria y cache del nucleo 2
                                 BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
                                 this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
+                                
+                                //revisar si hay LL activo
+                                if(this.vectorNucleos[0].banderaLL){
+                                    if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+                                        this.vectorNucleos[0].registros[32] = -1;
+                                    }
+                                }else if(this.vectorNucleos[1].banderaLL){
+                                    if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                        this.vectorNucleos[1].registros[32] = -1;
+                                    }
+                                }
                                 this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
                                 this.vectorNucleos[0].bloqueoCacheDatos.release();
                                 nucleo2BloqueoCache1 = false;
@@ -452,9 +498,20 @@ public class Controlador implements Runnable{
                                 this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
                             
                               //Cache del nucleo 1 tiene el bloque compartido
-                    			}else{                       
-                    				
-                    				//Subir de memoria
+                    			}else{  
+                                            
+                                        //revisar si hay LL activo
+                                        if(this.vectorNucleos[0].banderaLL){
+                                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+                                                this.vectorNucleos[0].registros[32] = -1;
+                                            }
+                                        }else if(this.vectorNucleos[1].banderaLL){
+                                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                                this.vectorNucleos[1].registros[32] = -1;
+                                            }
+                                        }
+                                        
+                    			//Subir de memoria
 	                            	this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
 	                            	BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
 	                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
@@ -487,7 +544,7 @@ public class Controlador implements Runnable{
                     	
                     }
                     
-                    
+
                     
 	            if(this.vectorNucleos[0].desactivado && this.vectorNucleos[1].desactivado) {
 	            	this.vectorNucleos[0].apagado = true;
