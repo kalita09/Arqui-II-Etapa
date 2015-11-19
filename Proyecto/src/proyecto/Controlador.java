@@ -241,57 +241,54 @@ public class Controlador implements Runnable{
                     vectorNucleos[0].bloqueInicio = colaEspera[0][this.apuntadorCola];
                     vectorNucleos[0].hiloActual = apuntadorCola;
                  }
+                 
+                 if(Nucleo.quantum == 0){
+	                	//revisar si hay LL activo
+	                    if(this.vectorNucleos[0].banderaLL){
+	                        if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+	                            this.vectorNucleos[0].registros[32] = -1;
+	                        }	                        
+	                    }
+	                    
+	                    Nucleo.quantum = this.quantum;
+                 }
             }
 	
-	            if((Nucleo.quantum == 0) || ((vectorNucleos[1].terminado) && (!vectorNucleos[1].desactivado))) { //nucleo 2 termino su hilo
-	
-	                //guardo contexto de hilo terminado
-	                this.vectorContextos[this.apuntadorCola2].guardarContexto(this.vectorNucleos[1].PC,this.vectorNucleos[1].registros);
-	                if(vectorNucleos[1].terminado) {
-	                	colaEspera[3][this.apuntadorCola2] = 1;
-	                }
-	                
-	                this.buscarSiguienteHilo(1);
-	                if(colaEspera[3][this.apuntadorCola2] == 1) {
-	                	this.vectorNucleos[1].desactivado = true;
-	                } else {
-	                    //asignacion de nuevo hilo para el nucleo
-	                    vectorNucleos[1].terminado=false;
-	                    vectorNucleos[1].seguir=true;
-	                    vectorNucleos[1].setContexto(this.vectorContextos[this.apuntadorCola2].PC,this.vectorContextos[this.apuntadorCola2].registros);
-	                    vectorNucleos[1].bloqueInicio = colaEspera[0][this.apuntadorCola2];
-	                    vectorNucleos[1].hiloActual = apuntadorCola2;
-	                }
-	                
-	                if(Nucleo.quantum == 0){
-	                	if(this.vectorNucleos[1].LLenEsperaDeSC){
-                    		this.vectorNucleos[1].RL = -1;
+            if((Nucleo.quantum == 0) || ((vectorNucleos[1].terminado) && (!vectorNucleos[1].desactivado))) { //nucleo 2 termino su hilo
+
+                //guardo contexto de hilo terminado
+                this.vectorContextos[this.apuntadorCola2].guardarContexto(this.vectorNucleos[1].PC,this.vectorNucleos[1].registros);
+                if(vectorNucleos[1].terminado) {
+                	colaEspera[3][this.apuntadorCola2] = 1;
+                }
+                
+                this.buscarSiguienteHilo(1);
+                if(colaEspera[3][this.apuntadorCola2] == 1) {
+                	this.vectorNucleos[1].desactivado = true;
+                } else {
+                    //asignacion de nuevo hilo para el nucleo
+                    vectorNucleos[1].terminado=false;
+                    vectorNucleos[1].seguir=true;
+                    vectorNucleos[1].setContexto(this.vectorContextos[this.apuntadorCola2].PC,this.vectorContextos[this.apuntadorCola2].registros);
+                    vectorNucleos[1].bloqueInicio = colaEspera[0][this.apuntadorCola2];
+                    vectorNucleos[1].hiloActual = apuntadorCola2;
+                }
+                
+                if(Nucleo.quantum == 0){
+                	//revisar si hay LL activo
+                    if(this.vectorNucleos[1].banderaLL){
+                        if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                            this.vectorNucleos[1].registros[32] = -1;
                         }
-	                    Nucleo.quantum = this.quantum;	                
-<<<<<<< HEAD
-		                        	                        		                
-		            }
-	            }	            
-	            
-=======
-	                        	                        
-	                 }
-                        
-                        
-                         //revisar si hay LL activo
-                        if(this.vectorNucleos[0].banderaLL){
-                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
-                                this.vectorNucleos[0].registros[32] = -1;
-                            }
-                        }else if(this.vectorNucleos[1].banderaLL){
-                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
-                                this.vectorNucleos[1].registros[32] = -1;
-                            }
-                        }
-	                
-	            }
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
+                    }
                     
+                    Nucleo.quantum = this.quantum;
+	                        	                        		                
+	            }
+                
+            }
+	            
+	                
                     //analizar posicion del codigo
                     //si nucleo 1 esta pidiendo si alguien tiene el bloque que ocupa
                     //LOAD WORD
@@ -392,26 +389,14 @@ public class Controlador implements Runnable{
                     				//copiar a memoria y cache de nucleo 1
                     				BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
 	                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque);
-<<<<<<< HEAD
-	                                if(this.vectorNucleos[1].LLenEsperaDeSC){
-	                                	if(this.vectorNucleos[1].bloqueLL == this.vectorNucleos[1].candado){
-	                                		this.vectorNucleos[1].RL = -1;
-	                                	}
-	                                }
-=======
-                                        
+                              
                                         //revisar si hay LL activo
                                         if(this.vectorNucleos[0].banderaLL){
                                             if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
                                                 this.vectorNucleos[0].registros[32] = -1;
                                             }
-                                        }else if(this.vectorNucleos[1].banderaLL){
-                                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
-                                                this.vectorNucleos[1].registros[32] = -1;
-                                            }
                                         }
                                         
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
 	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
 	                                this.vectorNucleos[1].bloqueoCacheDatos.release();
 	                                nucleo1BloqueoCache2 = false;
@@ -419,16 +404,18 @@ public class Controlador implements Runnable{
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
                                 
-<<<<<<< HEAD
 	                            //Bloque invalido en nucleo 1 y compartido en nucleo 2
                     			}else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)) {
                     				
+                    				
+                    				//revisar si hay LL activo
+                    				if(this.vectorNucleos[1].banderaLL){
+                                        if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                            this.vectorNucleos[1].registros[32] = -1;
+                                        }
+                                    }
+                    				
                     				//Subir de memoria
-                    				if(this.vectorNucleos[1].LLenEsperaDeSC){
-	                                	if(this.vectorNucleos[1].bloqueLL == this.vectorNucleos[1].candado){
-	                                		this.vectorNucleos[1].RL = -1;
-	                                	}
-	                                }
                     				this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
 	                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
@@ -440,40 +427,16 @@ public class Controlador implements Runnable{
                     				                            
 	                            //Bloque compartido en ambos nucleos
                     			}else {
-                    				if(this.vectorNucleos[1].LLenEsperaDeSC){
-	                                	if(this.vectorNucleos[1].bloqueLL == this.vectorNucleos[1].candado){
-	                                		this.vectorNucleos[1].RL = -1;
-	                                	}
-	                                }
+                    				if(this.vectorNucleos[1].banderaLL){
+                                        if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
+                                            this.vectorNucleos[1].registros[32] = -1;
+                                        }
+                    				}
                     				this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
                     				vectorNucleos[1].bloqueoCacheDatos.release();
                     				nucleo1BloqueoCache2 = false;
                     				this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
-=======
-                                //Cache del nucleo 2 tiene el bloque compartido
-                    			}else {
-                                            //revisar si hay LL activo
-                                            if(this.vectorNucleos[0].banderaLL){
-                                                if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
-                                                    this.vectorNucleos[0].registros[32] = -1;
-                                                }
-                                            }else if(this.vectorNucleos[1].banderaLL){
-                                                if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
-                                                    this.vectorNucleos[1].registros[32] = -1;
-                                                }
-                                            }
-                    				
-                                            //Subir de memoria
-                                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
-                                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
-                                            this.vectorNucleos[0].cacheDatos.setBloque(bloque);
-                                            vectorNucleos[1].bloqueoCacheDatos.release();
-                                            nucleo1BloqueoCache2 = false;
-                                            //this.busDatos.release();
-                                            this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
-                                            this.vectorNucleos[0].leerBloqueOtraCache = true;
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
                     			}
                             
                         //Fallo en ambas caches
@@ -512,23 +475,14 @@ public class Controlador implements Runnable{
                                 //copiar a memoria y cache del nucleo 2
                                 BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
                                 this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
-<<<<<<< HEAD
-                                if(this.vectorNucleos[0].LLenEsperaDeSC){
-                                	if(this.vectorNucleos[0].bloqueLL == this.vectorNucleos[1].candado){
-                                		this.vectorNucleos[0].RL = -1;
-                                	}
-=======
-                                
-                                //revisar si hay LL activo
-                                if(this.vectorNucleos[0].banderaLL){
-                                    if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
-                                        this.vectorNucleos[0].registros[32] = -1;
-                                    }
-                                }else if(this.vectorNucleos[1].banderaLL){
-                                    if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
-                                        this.vectorNucleos[1].registros[32] = -1;
-                                    }
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
+
+								//revisar si hay LL activo
+								if(this.vectorNucleos[0].banderaLL){
+								    if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+								        this.vectorNucleos[0].registros[32] = -1;
+								    }
+
+
                                 }
                                 this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
                                 this.vectorNucleos[0].bloqueoCacheDatos.release();
@@ -537,16 +491,7 @@ public class Controlador implements Runnable{
                                 this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
                             
                               //Cache del nucleo 1 tiene el bloque compartido
-<<<<<<< HEAD
-                    			}else{                       
-                    				
-                    				//Subir de memoria
-                    				if(this.vectorNucleos[0].LLenEsperaDeSC){
-	                                	if(this.vectorNucleos[0].bloqueLL == this.vectorNucleos[1].candado){
-	                                		this.vectorNucleos[0].RL = -1;
-	                                	}
-	                                }
-=======
+
                     			}else{  
                                             
                                         //revisar si hay LL activo
@@ -554,14 +499,9 @@ public class Controlador implements Runnable{
                                             if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
                                                 this.vectorNucleos[0].registros[32] = -1;
                                             }
-                                        }else if(this.vectorNucleos[1].banderaLL){
-                                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).ID==this.vectorNucleos[1].bloqueLL){
-                                                this.vectorNucleos[1].registros[32] = -1;
-                                            }
                                         }
                                         
-                    			//Subir de memoria
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
+                                    //Subir de memoria
 	                            	this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
 	                            	BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
 	                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
@@ -607,14 +547,14 @@ public class Controlador implements Runnable{
 
 	            }
                     if(this.lento==true){
-                    try {
-                        Thread.sleep(5000);
-                     
-                        
-                    } catch (Exception e) {
-                        }
+	                    try {
+	                        Thread.sleep(5000);
+	                     
+	                        
+	                    } catch (Exception e) {
+	                        }
                     }
+        }
 	                
-    }
 }
     

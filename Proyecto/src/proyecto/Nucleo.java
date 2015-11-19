@@ -59,7 +59,6 @@ public class Nucleo implements Runnable {
     boolean datoCargado;
     boolean leerBloqueOtraCache;
     boolean LLenEsperaDeSC;
-    int bloqueLL;
     int candado;
     
         
@@ -302,205 +301,146 @@ public class Nucleo implements Runnable {
 			break;
                             
 			case "35": //LW
-<<<<<<< HEAD
-				loadWord(codificacion);
+				this.loadWord(codificacion);
 			break;
 				
 			case "43": //SW
-				storeWord(codificacion);
+				this.storeWord(codificacion);
 			break;
 			
 			case "50": //LL
-				storeWord(codificacion);
-				this.RL = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
-				this.LLenEsperaDeSC = true;
-				this.candado = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
+				this.loadWord(codificacion);
+                //guardo en RL el valor de la direccion
+               int direccionLL = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+               registros[32] =  direccionLL;
+               //numero de bloque
+               this.bloqueLL = (direccion-640)/16;
+               //levantar la bandera esperando SC
+               this.banderaLL = true;
 			break;
 			
 			case "51": //SC
-				if (this.RL == Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])]) {
-					storeWord(codificacion);
-				}else {
-					registros[Integer.parseInt(codificacion[2])] = 0;
-				}
-				this.LLenEsperaDeSC = false;
+				if(registros[32] == Integer.parseInt(codificacion[3])+ registros[Integer.parseInt(codificacion[1])]    ){
+                    this.storeWord(codificacion);
+                    this.banderaLL = false;
+                    }else{
+                        registros[Integer.parseInt(codificacion[2])] = 0;
+                        this.banderaLL = false;
+                    }
 			break;
-=======
-                       this.loadWord(codificacion);
-			break;
-				
-                        case "43": //SW
-                        this.storeWord(codificacion);
-                        break;
-                        case "50":
-                        this.loadWord(codificacion);
-                         //guardo en RL el valor de la direccion
-                        int direccionLL = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-                        registros[32] =  direccionLL;
-                        //numero de bloque
-                        this.bloqueLL = (direccion-640)/16;
-                        //levantar la bandera esperando SC
-                        this.banderaLL = true;
- 
-                        break;
-                        case "51":
-                            if(registros[32] == Integer.parseInt(codificacion[3])+ registros[Integer.parseInt(codificacion[1])]    ){
-                            this.storeWord(codificacion);
-                            this.banderaLL = false;
-                            }else{
-                                registros[Integer.parseInt(codificacion[2])] = 0;
-                                this.banderaLL = false;
-                            }
-                        break;
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
-						
-                            
+                   
 		}
 
 	}
-<<<<<<< HEAD
-        public  void storeWord(String[] codificacion){
-        	boolean terminoStore = false;
-			direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-			
-			//Ciclo hasta que pueda bloquear la cache propia y el bus
-			while(!terminoStore) {
-				this.esperandoCache = true;
-				if(bloqueoCacheDatos.tryAcquire()) {					
-					
-					//Hit y bloque modificado
-					if((this.cacheDatos.contenerBloque(direccion)) && (this.cacheDatos.getBloque(direccion).estado == 'M')){
-						//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
+	public  void storeWord(String[] codificacion){
+    	boolean terminoStore = false;
+		direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
+		
+		//Ciclo hasta que pueda bloquear la cache propia y el bus
+		while(!terminoStore) {
+			this.esperandoCache = true;
+			if(bloqueoCacheDatos.tryAcquire()) {					
+				
+				//Hit y bloque modificado
+				if((this.cacheDatos.contenerBloque(direccion)) && (this.cacheDatos.getBloque(direccion).estado == 'M')){
+					//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
+					cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
+					//if(this.cacheDatos.getBloque(direccion).estado == 'M') {
+					//this.cacheDatos.setBloque(bloqueDatos);
+					bloqueoCacheDatos.release();
+					terminoStore = true;
+					this.esperandoCache = false;
+						
+				//Tengo el bloque compartido o hay fallo
+				} else {
+					if(busDatos.tryAcquire()) {
+	        			try {
+		                    this.barrier.await();
+		                } catch (InterruptedException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                } catch (BrokenBarrierException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                }
+	        			
+	        			//Solicitar la otra cache
+	        			this.revisarOtraCacheSW = true;
+	        			
+	        			this.leerBloqueOtraCache = false;
+	        			//Espera hasta que se haya leido el bloque en la otra cache para continuar
+	        			while(!leerBloqueOtraCache) {
+	        				try {
+			                    this.barrier.await();
+			                } catch (InterruptedException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                } catch (BrokenBarrierException ex) {
+			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+			                }
+	        			}
+	        			
+	        			busDatos.release();
+	        			//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
 						cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-						//if(this.cacheDatos.getBloque(direccion).estado == 'M') {
 						//this.cacheDatos.setBloque(bloqueDatos);
 						bloqueoCacheDatos.release();
-						terminoStore = true;
-						this.esperandoCache = false;
-							
-					//Tengo el bloque compartido o hay fallo
-					} else {
-						if(busDatos.tryAcquire()) {
-		        			try {
-			                    this.barrier.await();
-			                } catch (InterruptedException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                } catch (BrokenBarrierException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                }
-		        			
-		        			//Solicitar la otra cache
-		        			this.revisarOtraCacheSW = true;
-		        			
-		        			this.leerBloqueOtraCache = false;
-		        			//Espera hasta que se haya leido el bloque en la otra cache para continuar
-		        			while(!leerBloqueOtraCache) {
-		        				try {
-				                    this.barrier.await();
-				                } catch (InterruptedException ex) {
-				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-				                } catch (BrokenBarrierException ex) {
-				                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-				                }
-		        			}
-		        			
-		        			busDatos.release();
-		        			//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
-							cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-							//this.cacheDatos.setBloque(bloqueDatos);
-							bloqueoCacheDatos.release();
-							this.revisarOtraCacheSW = false;
-		        			terminoStore = true;
-		        			this.esperandoCache = false;
-		        			/*try {
-			                    this.barrier.await();
-			                } catch (InterruptedException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                } catch (BrokenBarrierException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                }*/
-		        			
-		        		//Bus ocupado	
-						}else {
-							this.bloqueoCacheDatos.release();
-							try {
-			                    this.barrier.await();
-			                } catch (InterruptedException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                } catch (BrokenBarrierException ex) {
-			                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-			                }
-						}
-						
+						this.revisarOtraCacheSW = false;
+	        			terminoStore = true;
+	        			this.esperandoCache = false;
+	        			/*try {
+		                    this.barrier.await();
+		                } catch (InterruptedException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                } catch (BrokenBarrierException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                }*/
+	        			
+	        		//Bus ocupado	
+					}else {
+						this.bloqueoCacheDatos.release();
+						try {
+		                    this.barrier.await();
+		                } catch (InterruptedException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                } catch (BrokenBarrierException ex) {
+		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+		                }
 					}
-													
-				//Cache propia ocupada
-				} else {
-					try {
-	                    this.barrier.await();
-	                } catch (InterruptedException ex) {
-	                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-	                } catch (BrokenBarrierException ex) {
-	                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-	                }
+					
 				}
+												
+			//Cache propia ocupada
+			} else {
+				try {
+                    this.barrier.await();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                }
 			}
-        }
+		}
+    }
                   
-        
-        public void loadWord(String[] codificacion){
-        	boolean terminoLoad = false;
-            int palabra;
-                    while(!terminoLoad) {
-                    	this.esperandoCache = true;
-                        if(bloqueoCacheDatos.tryAcquire()){
-                        		direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
-                                
-                                //Hit
-                                if((this.cacheDatos.contenerBloque(direccion))) {
-=======
-        public  void loadWord(String[] codificacion){
-         boolean terminoLoad = false;
+	public void loadWord(String[] codificacion){
+    	boolean terminoLoad = false;
         int palabra;
                 while(!terminoLoad) {
+                	this.esperandoCache = true;
                     if(bloqueoCacheDatos.tryAcquire()){
-                        try {
-                                this.barrier.await();
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (BrokenBarrierException ex) {
-                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-
-                            direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
+                    		direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
+                            
+                            //Hit
                             if((this.cacheDatos.contenerBloque(direccion))) {
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
-                                    palabra = this.cacheDatos.getDato(direccion);
-                                    registros[Integer.parseInt(codificacion[2])] = palabra;
-                                    bloqueoCacheDatos.release();
-                                    terminoLoad = true;
-<<<<<<< HEAD
-                                    this.esperandoCache = false;
+                                palabra = this.cacheDatos.getDato(direccion);
+                                registros[Integer.parseInt(codificacion[2])] = palabra;
+                                bloqueoCacheDatos.release();
+                                terminoLoad = true;
+                                this.esperandoCache = false;
 
-                                //Fallo
-                                } else {
-                                    if(busDatos.tryAcquire()) {
-                                        try {
-                                        	this.barrier.await();
-=======
-                                    try {
-                                        this.barrier.await();
-                                    } catch (InterruptedException ex) {
-                                        Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                    } catch (BrokenBarrierException ex) {
-                                        Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
-
-                                //Fallo
+                            //Fallo
                             } else {
                                 if(busDatos.tryAcquire()) {
                                     try {
-                                        this.barrier.await();
+                                    	this.barrier.await();
                                     } catch (InterruptedException ex) {
                                         Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
                                     } catch (BrokenBarrierException ex) {
@@ -520,6 +460,7 @@ public class Nucleo implements Runnable {
                                         }
                                         //Controlador se encarga de bloquear la otra cache
 
+                                        
                                         busDatos.release();
                                         palabra = this.cacheDatos.getDato(direccion);
                                        // int direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
@@ -527,28 +468,12 @@ public class Nucleo implements Runnable {
                                         bloqueoCacheDatos.release();
                                         terminoLoad = true;
                                         this.revisarOtraCacheLW = false;
-                                        try {
-                                            this.barrier.await();
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
-                                        } catch (InterruptedException ex) {
-                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                        } catch (BrokenBarrierException ex) {
-                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                        }
-<<<<<<< HEAD
-                                            this.revisarOtraCacheLW = true;
-
-                                            this.datoCargado = false;
-                                            while(!datoCargado) {
-                                                try {
-                                                this.barrier.await();
-=======
-                                        //direccion = -999;
+                                        this.esperandoCache = false;
 
                                 } else {
                                     bloqueoCacheDatos.release();
                                     try {
-                                        this.barrier.await();
+                                    	this.barrier.await();
                                     } catch (InterruptedException ex) {
                                         Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
                                     } catch (BrokenBarrierException ex) {
@@ -568,173 +493,8 @@ public class Nucleo implements Runnable {
                         }
                     }
 
-                }  
-         
-        }
-       
-        public  void storeWord(String[] codificacion){
-                boolean terminoStore = false;
-                                //int palabra1;
-                                direccion = Integer.parseInt(codificacion[3])+registros[Integer.parseInt(codificacion[1])];
-
-                                //Ciclo hasta que pueda bloquear la cache propia y el bus
-                                while(!terminoStore) {
-                                        if(bloqueoCacheDatos.tryAcquire()) {
-                                                try {
-                                                    this.barrier.await();
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
-                                                } catch (InterruptedException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                } catch (BrokenBarrierException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                }
-<<<<<<< HEAD
-                                            }
-                                            //Controlador se encarga de bloquear la otra cache
-
-                                            
-                                            busDatos.release();
-                                            palabra = this.cacheDatos.getDato(direccion);
-                                           // int direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
-                                            registros[Integer.parseInt(codificacion[2])] = palabra;
-                                            bloqueoCacheDatos.release();
-                                            terminoLoad = true;
-                                            this.revisarOtraCacheLW = false;
-                                            this.esperandoCache = false;
-
-                                    } else {
-                                        bloqueoCacheDatos.release();
-                                        try {
-                                        	this.barrier.await();
-                                        } catch (InterruptedException ex) {
-                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                        } catch (BrokenBarrierException ex) {
-                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                        }
-                                    }
-                                }
-
-
-                        } else {
-                            try {
-                            this.barrier.await();
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                            } catch (BrokenBarrierException ex) {
-                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
-                    }
-=======
-
-                                                //Hit
-                                                if((this.cacheDatos.contenerBloque(direccion)) && (this.cacheDatos.getBloque(direccion).estado == 'M')){
-                                                        BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
-                                                        cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-                                                        //if(this.cacheDatos.getBloque(direccion).estado == 'M') {
-                                                        this.cacheDatos.setBloque(bloqueDatos);
-                                                        bloqueoCacheDatos.release();
-                                                        terminoStore = true;
-                                                        try {
-                                                            this.barrier.await();
-                                                        } catch (InterruptedException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        } catch (BrokenBarrierException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        }
-
-                                                //Tengo el bloque compartido o hay fallo
-                                                } else {
-                                                    if(busDatos.tryAcquire()) {
-                                                        try {
-                                                            this.barrier.await();
-                                                        } catch (InterruptedException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        } catch (BrokenBarrierException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        }
-
-                                                        //Solicitar la otra cache
-                                                        this.revisarOtraCacheSW = true;
-
-                                                        this.leerBloqueOtraCache = false;
-                                                        //Espera hasta que se haya leido el bloque en la otra cache para continuar
-                                                        while(!leerBloqueOtraCache) {
-                                                            try {
-                                                                this.barrier.await();
-                                                            } catch (InterruptedException ex) {
-                                                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                            } catch (BrokenBarrierException ex) {
-                                                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                            }
-                                                        }
-
-                                                        busDatos.release();
-                                                        //BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
-                                                        cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-                                                        //this.cacheDatos.setBloque(bloqueDatos);
-                                                        bloqueoCacheDatos.release();
-                                                        this.revisarOtraCacheSW = false;
-                                                        terminoStore = true;
-                                                        try {
-                                                            this.barrier.await();
-                                                        } catch (InterruptedException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        } catch (BrokenBarrierException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        }
-
-                                                    //Bus ocupado	
-                                                    }else {
-                                                        this.bloqueoCacheDatos.release();
-                                                        try {
-                                                            this.barrier.await();
-                                                        } catch (InterruptedException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        } catch (BrokenBarrierException ex) {
-                                                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                        }
-                                                    }
-
-                                                }
-
-                                                //Fallo
-                                        /*} else {
-                                                if(busDatos.tryAcquire()) {
-                                                        try {
-                                                    this.barrier.await();
-                                                } catch (InterruptedException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                } catch (BrokenBarrierException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                }
-                                                }
-                                                this.revisarOtraCacheSW = true;
-                                                while(!leerBloqueOtraCache) {
-                                                        try {
-                                                    this.barrier.await();
-                                                } catch (InterruptedException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                } catch (BrokenBarrierException ex) {
-                                                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                                }
-                                                }
-                                        }*/
-
-
-                                        } else {
-                                            try {
-                                                this.barrier.await();
-                                            } catch (InterruptedException ex) {
-                                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                            } catch (BrokenBarrierException ex) {
-                                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                                            }
-                                        }
-                                }
->>>>>>> 6f679cd9d46baa113d0735b6b52fe61ebd9550d7
-        }
+                }
+    }   
 
 	
 }
