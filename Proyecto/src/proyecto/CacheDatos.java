@@ -39,6 +39,17 @@ public class CacheDatos {
         }
      
     }
+    
+    public boolean reeplazarBloqueModificado(int direccion) {
+    	//Busca el bloque de datos correspondiente en la cache
+        BloqueDatos b = this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
+        if(b.estado == 'M') {
+        	return true;
+        } else {
+        	return false;
+        }
+    }
+    
     public int getDato(int direccion) {
         
         BloqueDatos bloque = this.cacheDatos[((direccion-640)/this.TAMANOBLOQUE)%this.BLOQUES];
@@ -56,9 +67,9 @@ public class CacheDatos {
 	    }
     
     public void setBloque(BloqueDatos bloque) {
-     
-        
-        this.cacheDatos[bloque.ID%this.BLOQUES]= bloque;
+        this.cacheDatos[bloque.ID%this.BLOQUES].estado = bloque.estado;
+    	this.cacheDatos[bloque.ID%this.BLOQUES].ID = bloque.ID;
+        this.cacheDatos[bloque.ID%this.BLOQUES].datos= bloque.datos;
    
     }
     public BloqueDatos getBloque(int direccion) {

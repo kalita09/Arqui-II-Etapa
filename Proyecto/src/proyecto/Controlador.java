@@ -188,6 +188,10 @@ public class Controlador implements Runnable{
      public void run() {
         System.out.println("Todos han llegado a la barrera");
         Nucleo.ciclosReloj++;
+        if(Nucleo.ciclosReloj==45) {
+        	@SuppressWarnings("unused")
+			int a=40;
+        }
         this.ventana.jLabel9.setText(Integer.toString(Nucleo.ciclosReloj));
         this.ventana.jLabel10.setText(Integer.toString(Nucleo.quantum));
         this.ventana.jLabel11.setText(Integer.toString(vectorNucleos[0].hiloActual));
@@ -249,8 +253,7 @@ public class Controlador implements Runnable{
 	                            this.vectorNucleos[0].registros[32] = -1;
 	                        }	                        
 	                    }
-	                    
-	                    Nucleo.quantum = this.quantum;
+	                    	                    
                  }
             }
 	
@@ -281,7 +284,6 @@ public class Controlador implements Runnable{
                             this.vectorNucleos[1].registros[32] = -1;
                         }
                     }
-                    
                     Nucleo.quantum = this.quantum;
 	                        	                        		                
 	            }
@@ -295,14 +297,22 @@ public class Controlador implements Runnable{
                     
                     if(this.vectorNucleos[0].revisarOtraCacheLW) {
                     	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
-                    		nucleo1BloqueoCache2 = true;
                     		
-                    	} else if(nucleo1BloqueoCache2) {
+                    		//Verifica si hay un bloque modificado en la posición que voy a escribir
+                        	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+                        	if(bloque.estado == 'M') {
+                        		
+                        		//Lo guardo en memoria
+                        		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
+                        	}
+
+                    			//Hit en la otra cache
 		                        if((this.vectorNucleos[1].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion))){
-		                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M'){
+		                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M'){		                            			                            	
+		                            	
 		                                //copiar a mem y cache
-		                                BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
-		                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque);
+		                                bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+		                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque.datos);
 		                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 		                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
@@ -311,7 +321,7 @@ public class Controlador implements Runnable{
 		                            //estado==C
 		                            }else {
 		                                
-		                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
+		                                bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 		                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 		                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		                                this.vectorNucleos[0].datoCargado = true;
@@ -320,7 +330,7 @@ public class Controlador implements Runnable{
 		                            
 		                        //Fallo en la otra cache
 		                        }else{
-		                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
+		                            bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 		                            this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 		                            this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		                            this.vectorNucleos[0].datoCargado = true;
@@ -335,14 +345,22 @@ public class Controlador implements Runnable{
                     //si nucleo 2 esta pidiendo si alguien tiene el bloque que ocupa
                     }else if(this.vectorNucleos[1].revisarOtraCacheLW){
                     	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
-                    		nucleo2BloqueoCache1 = true;
                     		
-                    		}else if(nucleo2BloqueoCache1) {
+                    		//Verifica si hay un bloque modificado en la posición que voy a escribir
+                        	BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
+                        	if(bloque.estado == 'M') {
+                        		
+                        		//Lo guardo en memoria
+                        		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
+                        	}
+                    		/*nucleo2BloqueoCache1 = true;
+                    		
+                    		}else if(nucleo2BloqueoCache1) {*/
 		                        if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
 		                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'M'){
 		                                //copiar a mem y cache
-		                                BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
-		                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
+		                                bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
+		                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque.datos);
 		                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
 		                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
 		                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
@@ -351,7 +369,7 @@ public class Controlador implements Runnable{
 		                            //estado==C
 		                            }else {
 		                                
-		                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
+		                                bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
 		                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
 		                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
 		                                this.vectorNucleos[1].datoCargado = true;
@@ -360,7 +378,7 @@ public class Controlador implements Runnable{
 		                            
 		                        //Fallo en la otra cache
 		                        }else{
-		                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
+		                            bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
 		                            this.vectorNucleos[1].cacheDatos.setBloque(bloque);
 		                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
 		                            this.vectorNucleos[1].datoCargado = true;
@@ -377,18 +395,34 @@ public class Controlador implements Runnable{
                     
                     //Verifica si el nucleo 1 solicita revisar otra cache
                     if(this.vectorNucleos[0].revisarOtraCacheSW) {
-                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
+                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){/*
                     		nucleo1BloqueoCache2 = true; //Indica al controlador que el nucleo 1 tiene bloqueada la cache del nucleo 2 y asi utilizarla en el otro ciclo
                     		
-                    	}else if(nucleo1BloqueoCache2) {
+                    	}else if(nucleo1BloqueoCache2) {*/
                     		if((this.vectorNucleos[1].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion))){
                     			
-                    			//Cache del nucleo 2 tiene el bloque modificado
+                    			/*//Verifica si hay un bloque modificado en la posición que voy a escribir
+                            	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+                            	if(bloque.estado == 'M') {
+                            		
+                            		//Lo guardo en memoria
+                            		this.memoriaDatos.setBloque(bloque.ID, bloque);
+                            	}*/
+                    			
+                    			//Fallo en nucleo 1 y modificado en nucleo 2
                     			if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M') {
                     				
+                    				//Verifica si hay un bloque modificado en la posición que voy a escribir
+                                	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+                                	if(bloque.estado == 'M') {
+                                		
+                                		//Lo guardo en memoria
+                                		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
+                                	}
+                    				
                     				//copiar a memoria y cache de nucleo 1
-                    				BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
-	                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque);
+                    				bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+	                                this.memoriaDatos.setBloque(this.vectorNucleos[0].direccion, bloque.datos);
                               
                                         //revisar si hay LL activo
                                         if(this.vectorNucleos[0].banderaLL){
@@ -404,9 +438,16 @@ public class Controlador implements Runnable{
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
                                 
-	                            //Bloque invalido en nucleo 1 y compartido en nucleo 2
+	                            //Fallo en nucleo 1 y compartido en nucleo 2
                     			}else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)) {
                     				
+                    				//Verifica si hay un bloque modificado en la posición que voy a escribir
+                                	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+                                	if(bloque.estado == 'M') {
+                                		
+                                		//Lo guardo en memoria
+                                		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
+                                	}
                     				
                     				//revisar si hay LL activo
                     				if(this.vectorNucleos[1].banderaLL){
@@ -417,7 +458,7 @@ public class Controlador implements Runnable{
                     				
                     				//Subir de memoria
                     				this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
-	                                BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
+	                                bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 	                                vectorNucleos[1].bloqueoCacheDatos.release();
 	                                nucleo1BloqueoCache2 = false;
@@ -443,15 +484,23 @@ public class Controlador implements Runnable{
                         }else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)){                                   	
                         	this.vectorNucleos[1].bloqueoCacheDatos.release();
                         	
+                        	//Verifica si hay un bloque modificado en la posición que voy a escribir
+                        	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
+                        	if(bloque.estado == 'M') {
+                        		
+                        		//Lo guardo en memoria
+                        		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
+                        	}
+                        	
                         	//Subir de memoria
-                            BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
+                            bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
                             this.vectorNucleos[0].cacheDatos.setBloque(bloque);
                             //this.busDatos.release();                            
                             nucleo1BloqueoCache2 = false;
                             bloque.estado = 'M';
                             this.vectorNucleos[0].leerBloqueOtraCache = true;
                         
-                        //Fallo en cache del nucleo 2 y bloque compartido en cache del nucleo 1
+                        //Fallo en nucleo 2 y compartido nucleo 1
                         }else {
                         	this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
                         	this.vectorNucleos[0].leerBloqueOtraCache = true;
@@ -464,33 +513,33 @@ public class Controlador implements Runnable{
                 	
                     	//Se bloquea la cache del nucleo 2
                     	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
-                    		nucleo2BloqueoCache1 = true; //Indica al controlador que el nucleo 2 tiene bloqueada la cache del nucleo 1 y asi utilizarla en el otro ciclo
+                    		/*nucleo2BloqueoCache1 = true; //Indica al controlador que el nucleo 2 tiene bloqueada la cache del nucleo 1 y asi utilizarla en el otro ciclo
                     	
-                    	}else if(nucleo2BloqueoCache1) {
+                    	}else if(nucleo2BloqueoCache1) {*/
                     		if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
                     			
                     			//Cache del nucleo 1 tiene el bloque modificado
                     			if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'M'){
                     				
-                                //copiar a memoria y cache del nucleo 2
-                                BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
-                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque);
-
-								//revisar si hay LL activo
-								if(this.vectorNucleos[0].banderaLL){
-								    if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
-								        this.vectorNucleos[0].registros[32] = -1;
-								    }
-
-
-                                }
-                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
-                                this.vectorNucleos[0].bloqueoCacheDatos.release();
-                                nucleo2BloqueoCache1 = false;
-                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
-                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
+	                                //copiar a memoria y cache del nucleo 2
+	                                BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
+	                                this.memoriaDatos.setBloque(this.vectorNucleos[1].direccion, bloque.datos);
+	
+									//revisar si hay LL activo
+									if(this.vectorNucleos[0].banderaLL){
+									    if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).ID==this.vectorNucleos[0].bloqueLL){
+									        this.vectorNucleos[0].registros[32] = -1;
+									    }
+	
+	
+	                                }
+	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
+	                                this.vectorNucleos[0].bloqueoCacheDatos.release();
+	                                nucleo2BloqueoCache1 = false;
+	                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
+	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
                             
-                              //Cache del nucleo 1 tiene el bloque compartido
+                                //Cache del nucleo 1 tiene el bloque compartido
 
                     			}else{  
                                             

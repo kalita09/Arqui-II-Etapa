@@ -22,9 +22,9 @@ public class Main {
         int dialogResult = JOptionPane.showConfirmDialog (null, "¿Desea activar el modo lento?");
         Controlador controlador;
         if(dialogResult == JOptionPane.YES_OPTION){
-            controlador = new Controlador(2, quantum,m,b,true,ventana);
+            controlador = new Controlador(7, quantum,m,b,true,ventana);
         }else{
-            controlador = new Controlador(2, quantum,m,b,false,ventana);
+            controlador = new Controlador(7, quantum,m,b,false,ventana);
         }
         
         controlador.iniciar();

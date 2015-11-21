@@ -38,9 +38,9 @@ public class MemoriaDatos {
             return this.memoria[(direccion-640)/this.TAMANOBLOQUE];
             
         }
-        public void setBloque(int direccion,BloqueDatos bloque) {
+        public void setBloque(int direccion,int[] bloque) {
             
-            this.memoria[(direccion-640)/this.TAMANOBLOQUE]=bloque;
+            this.memoria[(direccion-640)/this.TAMANOBLOQUE].datos = bloque;
             
         }
         public BloqueDatos getpalabra(int direccion) {
