@@ -6,6 +6,8 @@
 package proyecto;
 
 import java.util.concurrent.CyclicBarrier;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 /**
@@ -27,7 +29,17 @@ public class Main {
             controlador = new Controlador(7, quantum,m,b,false,ventana);
         }
         
-        controlador.iniciar();
+        JButton open = new JButton();
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new java.io.File("."));
+        fc.setDialogTitle("Seleccione la carpeta que contenga los hilos");
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if(fc.showOpenDialog(open)==JFileChooser.APPROVE_OPTION){
+        }
+        
+        JOptionPane.showMessageDialog(null, fc.getSelectedFile().getAbsolutePath());
+       
+        controlador.iniciar(fc.getSelectedFile().getAbsolutePath()+"\\");
        
 
         

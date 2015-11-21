@@ -40,7 +40,7 @@ public class Memoria {
 	
 	//Copiar instrucciones del archivo a la memoria
         
-	public int leerArchivo(int hiloNum) {
+	public int leerArchivo(String directorio,int hiloNum) {
         numeroHilos = numeroHilos;
         int bloqueInicio =bloque;
         posInicio = inst;          
@@ -48,9 +48,10 @@ public class Memoria {
         FileReader fr = null;
         BufferedReader br = null;
         
+        //String directorio1 = "Hilos/";
 
         try {
-             archivo = new File ("Hilos/"+hiloNum+".txt");
+             archivo = new File (directorio+hiloNum+".txt");
              
              boolean seguir = true;         
              fr = new FileReader (archivo);

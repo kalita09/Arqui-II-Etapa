@@ -60,14 +60,14 @@ public class Controlador implements Runnable{
             this.ventana = ventana;
 	}
 	        
-    void iniciar(){
+    void iniciar(String directorio){
         this.memoriaInstrucciones = new Memoria();
         this.memoriaDatos = new MemoriaDatos();
         int bloque; //bloque donde inicia cada archivo (hilo)
             ventana.setVisible(true);
         //Guarda en cola donde inicia cada hilo
         for(int j = 1; j <= numeroHilos; j++ ){   
-            bloque = memoriaInstrucciones.leerArchivo(j);
+            bloque = memoriaInstrucciones.leerArchivo( directorio,j);
             colaEspera[0][j-1] = bloque;
             colaEspera[1][j-1] = memoriaInstrucciones.getPosicion();
             //guardo el length total de instrucciones por hilo = PC final                
@@ -294,7 +294,7 @@ public class Controlador implements Runnable{
                     if(this.vectorNucleos[0].revisarOtraCacheLW) {
                     	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
                     		
-                    		//Verifica si hay un bloque modificado en la posición que voy a escribir
+                    		//Verifica si hay un bloque modificado en la posicion que voy a escribir
                         	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
                         	if(bloque.estado == 'M') {
                         		
@@ -340,7 +340,7 @@ public class Controlador implements Runnable{
                     }else if(this.vectorNucleos[1].revisarOtraCacheLW){
                     	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
                     		
-                    		//Verifica si hay un bloque modificado en la posición que voy a escribir
+                    		//Verifica si hay un bloque modificado en la posicion que voy a escribir
                         	BloqueDatos bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion);
                         	if(bloque.estado == 'M') {
                         		
@@ -392,7 +392,7 @@ public class Controlador implements Runnable{
                     			//Fallo en nucleo 1 y modificado en nucleo 2
                     			if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M') {
                     				
-                    				//Verifica si hay un bloque modificado en la posición que voy a escribir
+                    				//Verifica si hay un bloque modificado en la posicion que voy a escribir
                                 	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
                                 	if(bloque.estado == 'M') {
                                 		
@@ -420,7 +420,7 @@ public class Controlador implements Runnable{
 	                            //Fallo en nucleo 1 y compartido en nucleo 2
                     			}else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)) {
                     				
-                    				//Verifica si hay un bloque modificado en la posición que voy a escribir
+                    				//Verifica si hay un bloque modificado en la posicion que voy a escribir
                                 	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
                                 	if(bloque.estado == 'M') {
                                 		
@@ -461,7 +461,7 @@ public class Controlador implements Runnable{
                         }else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)){                         	
                         	this.vectorNucleos[1].bloqueoCacheDatos.release();
                         	
-                        	//Verifica si hay un bloque modificado en la posición que voy a escribir
+                        	//Verifica si hay un bloque modificado en la posicion que voy a escribir
                         	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
                         	if(bloque.estado == 'M') {
                         		
