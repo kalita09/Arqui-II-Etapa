@@ -339,14 +339,11 @@ public class Nucleo implements Runnable {
 		//Ciclo hasta que pueda bloquear la cache propia y el bus
 		while(!terminoStore) {
 			this.esperandoCache = true;
-			if(bloqueoCacheDatos.tryAcquire()) {					
+			if(bloqueoCacheDatos.tryAcquire()) {
 				
 				//Hit y bloque modificado
 				if((this.cacheDatos.contenerBloque(direccion)) && (this.cacheDatos.getBloque(direccion).estado == 'M')){
-					//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
 					cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-					//if(this.cacheDatos.getBloque(direccion).estado == 'M') {
-					//this.cacheDatos.setBloque(bloqueDatos);
 					bloqueoCacheDatos.release();
 					terminoStore = true;
 					this.esperandoCache = false;
@@ -378,20 +375,11 @@ public class Nucleo implements Runnable {
 	        			}
 	        			
 	        			busDatos.release();
-	        			//BloqueDatos bloqueDatos = this.cacheDatos.getBloque(direccion);
 						cacheDatos.setDato(direccion, registros[Integer.parseInt(codificacion[2])]);
-						//this.cacheDatos.setBloque(bloqueDatos);
 						bloqueoCacheDatos.release();
 						this.revisarOtraCacheSW = false;
 	        			terminoStore = true;
 	        			this.esperandoCache = false;
-	        			/*try {
-		                    this.barrier.await();
-		                } catch (InterruptedException ex) {
-		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-		                } catch (BrokenBarrierException ex) {
-		                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-		                }*/
 	        			
 	        		//Bus ocupado	
 					}else {
@@ -463,7 +451,6 @@ public class Nucleo implements Runnable {
                                         
                                         busDatos.release();
                                         palabra = this.cacheDatos.getDato(direccion);
-                                       // int direccion = Integer.parseInt(codificacion[3]) + registros[Integer.parseInt(codificacion[1])];
                                         registros[Integer.parseInt(codificacion[2])] = palabra;
                                         bloqueoCacheDatos.release();
                                         terminoLoad = true;

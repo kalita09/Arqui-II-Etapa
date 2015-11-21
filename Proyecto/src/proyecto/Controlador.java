@@ -38,8 +38,6 @@ public class Controlador implements Runnable{
     static Semaphore busDatos;
     public boolean seguir;   
     Ventana ventana;
-    public boolean nucleo1BloqueoCache2;
-    public boolean nucleo2BloqueoCache1;
 	
     public Controlador(int tamanoCola,int quantum,int m,int b,boolean lento,Ventana ventana) {
 	    
@@ -60,8 +58,6 @@ public class Controlador implements Runnable{
             this.busDatos = new Semaphore(1);
 	    this.seguir = true;
             this.ventana = ventana;
-            this.nucleo1BloqueoCache2 = false ;
-            this.nucleo2BloqueoCache1 = false;
 	}
 	        
     void iniciar(){
@@ -308,7 +304,7 @@ public class Controlador implements Runnable{
 
                     			//Hit en la otra cache
 		                        if((this.vectorNucleos[1].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion))){
-		                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M'){		                            			                            	
+		                            if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M'){                            			                            	
 		                            	
 		                                //copiar a mem y cache
 		                                bloque = this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
@@ -335,10 +331,8 @@ public class Controlador implements Runnable{
 		                            this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'C';
 		                            this.vectorNucleos[0].datoCargado = true;
 		                        }
-                            nucleo1BloqueoCache2 = false;
                             vectorNucleos[1].bloqueoCacheDatos.release();
                             this.vectorNucleos[0].datoCargado = true;
-                            //Nucleo.busDatos.release();
                                         
                     	}
                     
@@ -353,9 +347,8 @@ public class Controlador implements Runnable{
                         		//Lo guardo en memoria
                         		this.memoriaDatos.setBloque(bloque.ID*16+640, bloque.datos);
                         	}
-                    		/*nucleo2BloqueoCache1 = true;
-                    		
-                    		}else if(nucleo2BloqueoCache1) {*/
+                        		
+                        		//Hit en la otra cache
 		                        if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
 		                            if(this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado == 'M'){
 		                                //copiar a mem y cache
@@ -383,10 +376,8 @@ public class Controlador implements Runnable{
 		                            this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'C';
 		                            this.vectorNucleos[1].datoCargado = true;
 		                        }
-                            nucleo2BloqueoCache1 = false;
                             vectorNucleos[0].bloqueoCacheDatos.release();
                             this.vectorNucleos[1].datoCargado = true;
-                            //Nucleo.busDatos.release();
                             
                     	}
                     
@@ -395,20 +386,9 @@ public class Controlador implements Runnable{
                     
                     //Verifica si el nucleo 1 solicita revisar otra cache
                     if(this.vectorNucleos[0].revisarOtraCacheSW) {
-                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){/*
-                    		nucleo1BloqueoCache2 = true; //Indica al controlador que el nucleo 1 tiene bloqueada la cache del nucleo 2 y asi utilizarla en el otro ciclo
-                    		
-                    	}else if(nucleo1BloqueoCache2) {*/
+                    	if(vectorNucleos[1].bloqueoCacheDatos.tryAcquire()){
                     		if((this.vectorNucleos[1].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion))){
-                    			
-                    			/*//Verifica si hay un bloque modificado en la posición que voy a escribir
-                            	BloqueDatos bloque = this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion);
-                            	if(bloque.estado == 'M') {
-                            		
-                            		//Lo guardo en memoria
-                            		this.memoriaDatos.setBloque(bloque.ID, bloque);
-                            	}*/
-                    			
+                    			                    			
                     			//Fallo en nucleo 1 y modificado en nucleo 2
                     			if(this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado == 'M') {
                     				
@@ -433,7 +413,6 @@ public class Controlador implements Runnable{
                                         
 	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
 	                                this.vectorNucleos[1].bloqueoCacheDatos.release();
-	                                nucleo1BloqueoCache2 = false;
 	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
@@ -461,7 +440,6 @@ public class Controlador implements Runnable{
 	                                bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
 	                                this.vectorNucleos[0].cacheDatos.setBloque(bloque);
 	                                vectorNucleos[1].bloqueoCacheDatos.release();
-	                                nucleo1BloqueoCache2 = false;
 	                                //this.busDatos.release();
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
@@ -475,13 +453,12 @@ public class Controlador implements Runnable{
                     				}
                     				this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'I';
                     				vectorNucleos[1].bloqueoCacheDatos.release();
-                    				nucleo1BloqueoCache2 = false;
                     				this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
 	                                this.vectorNucleos[0].leerBloqueOtraCache = true;
                     			}
                             
                         //Fallo en ambas caches
-                        }else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)){                                   	
+                        }else if(!this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[0].direccion)){                         	
                         	this.vectorNucleos[1].bloqueoCacheDatos.release();
                         	
                         	//Verifica si hay un bloque modificado en la posición que voy a escribir
@@ -496,12 +473,12 @@ public class Controlador implements Runnable{
                             bloque = this.memoriaDatos.getBloque(this.vectorNucleos[0].direccion);
                             this.vectorNucleos[0].cacheDatos.setBloque(bloque);
                             //this.busDatos.release();                            
-                            nucleo1BloqueoCache2 = false;
                             bloque.estado = 'M';
                             this.vectorNucleos[0].leerBloqueOtraCache = true;
                         
                         //Fallo en nucleo 2 y compartido nucleo 1
                         }else {
+                        	this.vectorNucleos[1].bloqueoCacheDatos.release();
                         	this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
                         	this.vectorNucleos[0].leerBloqueOtraCache = true;
                         }
@@ -513,9 +490,7 @@ public class Controlador implements Runnable{
                 	
                     	//Se bloquea la cache del nucleo 2
                     	if(vectorNucleos[0].bloqueoCacheDatos.tryAcquire()){
-                    		/*nucleo2BloqueoCache1 = true; //Indica al controlador que el nucleo 2 tiene bloqueada la cache del nucleo 1 y asi utilizarla en el otro ciclo
-                    	
-                    	}else if(nucleo2BloqueoCache1) {*/
+
                     		if((this.vectorNucleos[0].cacheDatos.contenerBloque(this.vectorNucleos[1].direccion))){
                     			
                     			//Cache del nucleo 1 tiene el bloque modificado
@@ -535,7 +510,6 @@ public class Controlador implements Runnable{
 	                                }
 	                                this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'I';
 	                                this.vectorNucleos[0].bloqueoCacheDatos.release();
-	                                nucleo2BloqueoCache1 = false;
 	                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
 	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
                             
@@ -555,7 +529,6 @@ public class Controlador implements Runnable{
 	                            	BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
 	                                this.vectorNucleos[1].cacheDatos.setBloque(bloque);
 	                                vectorNucleos[0].bloqueoCacheDatos.release();
-	                                nucleo2BloqueoCache1 = false;
 	                                //this.busDatos.release();
 	                                this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
 	                                this.vectorNucleos[1].leerBloqueOtraCache = true;
@@ -567,16 +540,17 @@ public class Controlador implements Runnable{
                     			//Subir de memoria
                     			BloqueDatos bloque = this.memoriaDatos.getBloque(this.vectorNucleos[1].direccion);
                     			this.vectorNucleos[1].cacheDatos.setBloque(bloque);
-                    			vectorNucleos[0].bloqueoCacheDatos.release();
-                    			nucleo2BloqueoCache1 = false;	                            
+                    			vectorNucleos[0].bloqueoCacheDatos.release();	                            
 	                            //this.busDatos.release();
-                    			bloque.estado = 'M';
+                    			this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[1].direccion).estado = 'M';
+                    			//bloque.estado = 'M';
 	                            this.vectorNucleos[1].leerBloqueOtraCache = true;
                     		
-	                        //Fallo en cache del nucleo 2 y bloque compartido en cache del nucleo 1
+	                        //Fallo en cache del nucleo 1 y bloque compartido en cache del nucleo 2
                             }else {
-                            	this.vectorNucleos[0].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
-                            	this.vectorNucleos[0].leerBloqueOtraCache = true;
+                            	vectorNucleos[0].bloqueoCacheDatos.release();
+                            	this.vectorNucleos[1].cacheDatos.getBloque(this.vectorNucleos[0].direccion).estado = 'M';
+                            	this.vectorNucleos[1].leerBloqueOtraCache = true;
                             }
                                                                 
                     	}
