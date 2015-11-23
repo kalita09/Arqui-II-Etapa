@@ -287,12 +287,19 @@ public class Nucleo implements Runnable {
 			break;
 			
 			case "3": //JAL
-				registros[31] = this.PC;
+                            //mostrar al usuario el pc correcto
+				registros[31] = this.PC*4;
 				this.PC += Integer.parseInt(codificacion[3])/4;
 			break;
 			
 			case "2": //JR
-				this.PC = registros[Integer.parseInt(codificacion[1])];
+                                if(Integer.parseInt(codificacion[1])==31){
+                                  this.PC = registros[Integer.parseInt(codificacion[1])];  
+                                  this.PC = this.PC/4;
+                                }else{
+                                  this.PC = registros[Integer.parseInt(codificacion[1])]; 
+                                }
+				
 			break;
 			
 			case "63": //JR
